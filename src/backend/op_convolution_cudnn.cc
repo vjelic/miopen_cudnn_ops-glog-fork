@@ -91,7 +91,7 @@ void op_convolution_cudnn::tune_op(){
         CHECK_CUDNN(cudnnSetFilter4dDescriptor(filter_desc,
 	                to_cudnn_data_type(filter->data_type),
                     /* CUDNN_TENSOR_NCHW->KCRS, K->out feature map, C->input feat map, R->row per filter, S->col per filter*/
-                    to_cudnn_layout(filter->layout), 
+                    to_cudnn_layout(filter->layout),
                     conv_desc->k,
                     //https://docs.nvidia.com/deeplearning/sdk/cudnn-developer-guide/index.html#grouped-convolutions
                     conv_desc->input_c/conv_desc->groups,
@@ -172,7 +172,7 @@ void op_convolution_cudnn::tune_op(){
         // find bwd data algo
         cudnnConvolutionBwdDataAlgoPerf_t perfs_data[5];
         int returned_algos;
-        CHECK_CUDNN(cudnnFindConvolutionBackwardDataAlgorithm(dev_cuda->handle, 
+        CHECK_CUDNN(cudnnFindConvolutionBackwardDataAlgorithm(dev_cuda->handle,
             filter_desc,
             (const cudnnTensorDescriptor_t)output_grad->desc,
             (const cudnnConvolutionDescriptor_t)conv_desc->desc,
@@ -229,7 +229,7 @@ void op_convolution_cudnn::tune_op(){
         // find bwd filter algo
         cudnnConvolutionBwdFilterAlgoPerf_t perfs_filter[5];
         int returned_algos;
-        CHECK_CUDNN(cudnnFindConvolutionBackwardFilterAlgorithm(dev_cuda->handle, 
+        CHECK_CUDNN(cudnnFindConvolutionBackwardFilterAlgorithm(dev_cuda->handle,
             (const cudnnTensorDescriptor_t)input->desc,
             (const cudnnTensorDescriptor_t)output_grad->desc,
             need_psudo_fp16_config ? (const cudnnConvolutionDescriptor_t)conv_desc->desc_wrw : (const cudnnConvolutionDescriptor_t)conv_desc->desc,
@@ -367,7 +367,7 @@ void op_convolution_cudnn::print_fwd_time(const float kernel_average_time) {
 	int in_n, in_c, in_h, in_w;
 	int wei_k, wei_c, wei_h, wei_w;
 	int out_n, out_c, out_h, out_w;
-	
+
     cudnnDataType_t dt;
     cudnnTensorFormat_t fmt;
     int n_stride, c_stride, h_stride, w_stride;
@@ -436,7 +436,7 @@ void op_convolution_cudnn::print_bwd_time(const float kernel_average_time) {
 	int in_n, in_c, in_h, in_w;
 	int wei_k, wei_c, wei_h, wei_w;
 	int out_n, out_c, out_h, out_w;
-	
+
     cudnnDataType_t dt;
     cudnnTensorFormat_t fmt;
     int n_stride, c_stride, h_stride, w_stride;
@@ -493,7 +493,7 @@ void op_convolution_cudnn::print_bwd_time(const float kernel_average_time) {
                         // ,algo(fwd),workspace,time(ms),gflops,efficiency(%)");
                 fprintf(fp, ",%s,%s,%.2f,%.2f,%.2f%%",
                     "unsupported", "0",
-                    0, 0, 0);
+                    0.0, 0.0, 0.0);
                 fclose(fp);
             }
         }
@@ -505,13 +505,13 @@ void op_convolution_cudnn::print_wrw_time(const float kernel_average_time) {
 	std::string algo_name = get_bwd_filter_name();
     bool need_psudo_fp16_config = filter->data_type == TENSOR_DT_HALF && filter->layout == TENSOR_LAYOUT_NHWC;
 	std::cout << "OpDriver Backward Weights Conv. Algorithm: " << algo_name << "." <<(need_psudo_fp16_config?"[PSUDO_FP16_CONFIG]":"")  << std::endl;
-    
+
 
 	printf("GPU Kernel Time Backward Weights Conv. Elapsed: %f ms (average)\n", kernel_average_time);
 	int in_n, in_c, in_h, in_w;
 	int wei_k, wei_c, wei_h, wei_w;
 	int out_n, out_c, out_h, out_w;
-	
+
     cudnnDataType_t dt;
     cudnnTensorFormat_t fmt;
     int n_stride, c_stride, h_stride, w_stride;
@@ -567,7 +567,7 @@ void op_convolution_cudnn::print_wrw_time(const float kernel_average_time) {
                         // ,algo(wrw),workspace,time(ms),gflops,efficiency(%)");
                 fprintf(fp, ",%s,%s,%.2f,%.2f,%.2f%%",
                     "unsupported", "0",
-                    0, 0, 0);
+                    0.0, 0.0, 0.0);
                 fprintf(fp,"\n");
                 fclose(fp);
             }

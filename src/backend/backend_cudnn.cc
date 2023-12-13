@@ -16,9 +16,9 @@ static inline void dump_dev_prop(cudaDeviceProp * prop, int dev_id){
 
 device_cuda::device_cuda(int dev_id){
     this->type = DEVICE_CUDA;
-    int devcount;
     CHECK_CU(cuInit(0));
 #if 0
+    int devcount;
     CHECK_CUDA(cudaGetDeviceCount(&devcount));
     assert(dev_id < devcount && "dev request must small than available ");
 
@@ -28,7 +28,7 @@ device_cuda::device_cuda(int dev_id){
         dump_dev_prop(&cuda_prop, i);
     }
 
-    
+
     cudaStream_t q;
     CHECK_CUDA(cudaSetDevice(dev_id));
     CHECK_CUDA(cudaStreamCreate(&q));
@@ -107,7 +107,7 @@ void device_cuda::device_timer_destroy(device_timer_t * dt){
         return;
     delete (device_timer_cuda*)dt;
 }
-tensor_t * device_cuda::tensor_create(size_t * dims, size_t n_dim, 
+tensor_t * device_cuda::tensor_create(size_t * dims, size_t n_dim,
         tensor_data_type data_type, tensor_layout layout){
 
     if(n_dim == 1 && layout == TENSOR_LAYOUT_1D){
@@ -148,7 +148,7 @@ tensor_t * device_cuda::tensor_create(size_t * dims, size_t n_dim,
 }
 
 #if 0
-tensor_t * device_cuda::filter_create(size_t * dims, size_t n_dim, 
+tensor_t * device_cuda::filter_create(size_t * dims, size_t n_dim,
         tensor_data_type data_type, tensor_layout layout){
     if(n_dim == 1 && layout == TENSOR_LAYOUT_1D){
         //void* ptr;
@@ -239,7 +239,7 @@ pooling_desc_t * device_cuda::pooling_desc_create(int * kernel, int * stride, in
     CHECK_CUDNN(cudnnCreatePoolingDescriptor(&desc));
     CHECK_CUDNN(cudnnSetPooling2dDescriptor(desc, pool_mode, CUDNN_PROPAGATE_NAN,
         kernel[0], kernel[1], padding[0], padding[1], stride[0], stride[1]));
-    
+
     pooling_desc_t *pooling_desc = new pooling_desc_t;
     pooling_desc->mode = mode;
     pooling_desc->n_dims = 2;
@@ -377,7 +377,7 @@ void dump_cudnn_tensor_desc(const cudnnTensorDescriptor_t tensor_desc){
     int n,c,h,w;
     int n_stride, c_stride, h_stride, w_stride;
     cudnnDataType_t dt;
-    CHECK_CUDNN(cudnnGetTensor4dDescriptor(tensor_desc, &dt, &n, &c, &h, &w, 
+    CHECK_CUDNN(cudnnGetTensor4dDescriptor(tensor_desc, &dt, &n, &c, &h, &w,
         &n_stride, &c_stride, &h_stride, &w_stride));
     std::cout<<"<tensor desc> dt:"<<dt<<", n:"<<n<<", c:"<<c<<", h:"<<h<<", w:"<<w<<
         ", n_stride:"<<n_stride<<", c_stride:"<<c_stride<<", h_stride:"<<h_stride<<", w_stride:"<<w_stride<<std::endl;

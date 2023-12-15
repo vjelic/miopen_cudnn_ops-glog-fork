@@ -39,6 +39,8 @@ static inline double get_nrms(std::string direction, tensor_data_type data_type)
         }
         else if (data_type == TENSOR_DT_HALF){
             return 8.2e-3;
+        } else {
+            return 0.0;
         }
     };
     double nrms = basic_tolerance();
@@ -264,7 +266,7 @@ class arg_parser{
             std::string val = arg_pair[arg_name].value;
             if(val == ARG_VALUE_INIT)
                 val = arg_pair[arg_name].default_value;
-            return val; 
+            return val;
         }
         int  get_arg_int(const char * arg){
             std::string val = get_arg(arg);
@@ -283,7 +285,7 @@ class arg_parser{
                     "(default:"<<a.default_value<<")"
 #if 0
                     <<", cur:"<<a.value
-#endif           
+#endif
                     <<std::endl;
             }
         }
@@ -310,17 +312,17 @@ void writeToTxt(const char* fileName, T* data, size_t dataNumItems)
     std::ofstream outFile(fileName, std::ios::binary);
 
     if(outFile)
-    {    
+    {
         for (size_t i = 0; i < dataNumItems; i++)
             outFile << std::setprecision(18) << data[i] << ' ';
         outFile << std::endl;
         outFile.close();
         debug_msg("Wrote output to file %s\n", fileName);
-    }    
-    else 
-    {    
+    }
+    else
+    {
         debug_msg("Could not open file %s for writing\n", fileName);
-    }    
+    }
 }
 
 template <typename T>
@@ -329,18 +331,18 @@ bool readFromTxt(T *data, size_t dataNumItems, const char* fileName)
     std::ifstream infile(fileName, std::ios::binary);
 
     if(infile)
-    {    
+    {
         for (size_t i = 0; i < dataNumItems; i++)
             infile >> data[i];
         infile.close();
         debug_msg("Read data from input file %s\n", fileName);
         return true;
-    }    
-    else 
-    {    
+    }
+    else
+    {
         debug_msg("Could not open file %s for reading\n", fileName);
         return false;
-    }    
+    }
 }
 
 #if 0
@@ -625,7 +627,7 @@ static int conv_driver(int argc, char ** argv){
     int groups   = parser.get_arg_int("g");
     int dilation_h = parser.get_arg_int("l");
     int dilation_w = parser.get_arg_int("j");
-    int bias = parser.get_arg_int("b");
+    // int bias = parser.get_arg_int("b");
     std::string cmode = parser.get_arg("m");
     int fmode = parser.get_arg_int("F");
     int is_fwd = (fmode == 0 || fmode & 1) ? 1 : 0;
@@ -646,12 +648,14 @@ static int conv_driver(int argc, char ** argv){
 	// TODO: currently do verify at fp32 only
 	// is_verify &= tensor_dtype == TENSOR_DT_FLOAT ? 1 : 0;
 
+    #ifdef DEBUG
     debug_msg("Conv2d(input=(%lu,%lu,%lu,%lu), output_channels=(%lu), kernel_size=(%d,%d), "
             "stride=(%d,%d), padding=(%d,%d), bias=%s\n\tgroups=(%d), "
             "dilation=(%d,%d))\n",
             batch, input_c, input_h, input_w, output_c, fil_h, fil_w,
             stride_h, stride_w, pad_h, pad_w, bias > 0 ? "True" : "False",
             groups, dilation_h, dilation_w);
+    #endif
 
     std::string in_x = parser.get_arg("d");
     std::string in_w = parser.get_arg("e");
@@ -1051,7 +1055,7 @@ static int act_driver(int argc, char ** argv){
     parser.insert_arg("h", "height", "128");
     parser.insert_arg("w", "width", "128");
     parser.insert_arg("m", "activation mode, "
-            "sigmoid relu tanh clipped-relu elu identity", 
+            "sigmoid relu tanh clipped-relu elu identity",
             "sigmoid");
     parser.insert_arg("a", "alpha value, used in some activation mode", "1.0");
     parser.insert_arg("f", "forward(1) or backward(0)", "0");

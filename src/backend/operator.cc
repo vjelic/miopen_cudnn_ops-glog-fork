@@ -26,6 +26,9 @@ operator_base * operator_create(device_base *device, operator_type op_type, void
         DISPATCH_OP(OP_CONV, op_convolution)
         // DISPATCH_OP(OP_POOLING, op_pooling)
         // DISPATCH_OP(OP_ACTIVATION, op_activation)
+        case OP_POOLING:
+        case OP_ACTIVATION:
+        default: op = nullptr;
     }
 
     if(op){

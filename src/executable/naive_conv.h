@@ -72,7 +72,7 @@ private:
 template<class blockwise_t, class threadwise_t, class... args_t>
 void naive_conv_blockwise_in_parallel(threadwise_t thread_func, args_t... args)
 {
-    int num_threads = std::thread::hardware_concurrency();
+    size_t num_threads = std::thread::hardware_concurrency();
     std::vector<std::thread> threads(num_threads);
 
     for(size_t tid = 0; tid < num_threads; tid++)
@@ -206,7 +206,7 @@ static inline void naive_conv_bwd_nchw(float *src_grad, const float *filter,
                     if (cur_ow >= ow)
                         continue;
 
-                    o_idx = in * k * oh * ow + ig * k_per_group * oh * ow + ik * oh * ow + 
+                    o_idx = in * k * oh * ow + ig * k_per_group * oh * ow + ik * oh * ow +
                             cur_oh * ow + cur_ow;
                     f_idx = ig * k_per_group * c_per_group * fy * fx + ik * c_per_group * fy * fx + ic * fy * fx +
                             ir * fx + is;
@@ -970,7 +970,7 @@ static inline void naive_conv_bwd_ndhwc(float *src_grad, const float *filter, co
     size_t cur_od, cur_oh, cur_ow, o_idx, i_idx, f_idx;
 
     for (ig = 0; ig < group; ig++) {
-        for (in = 0; in < n; in++) { 
+        for (in = 0; in < n; in++) {
             for (id = 0; id < d; id++) {
                 for (ih = 0; ih < h; ih++) {
                     for (iw = 0; iw < w; iw++) {

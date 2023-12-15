@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE release)
@@ -19,7 +19,7 @@ option(WITH_CUDNN "compile with cudnn, aka nv platform" OFF)
 list(APPEND backend_src
             src/backend/math.cc
             src/backend/backend.cc
-            src/backend/operator.cc 
+            src/backend/operator.cc
             src/backend/op_convolution.cc )
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")

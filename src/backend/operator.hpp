@@ -6,7 +6,8 @@
 enum operator_type{
     OP_CONV = 0,
     OP_POOLING,
-    OP_ACTIVATION
+    OP_ACTIVATION,
+    OP_RNN
 };
 
 class operator_base{

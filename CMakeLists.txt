@@ -19,7 +19,7 @@ option(WITH_CUDNN "compile with cudnn, aka nv platform" OFF)
 list(APPEND backend_src
             src/backend/math.cc
             src/backend/backend.cc
-            src/backend/operator.cc 
+            src/backend/operator.cc
             src/backend/op_convolution.cc )
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
@@ -40,14 +40,13 @@ endmacro()
 
 if(WITH_MIOPEN)
     message(STATUS "compile on miopen, amd platform")
-    set(ROCM_PATH /opt/rocm)
-    set(HIP_PATH ${ROCM_PATH}/hip)
 
     set(CMAKE_CXX_COMPILER ${HIP_PATH}/bin/hipcc)
     add_definitions(-DWITH_MIOPEN)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${HIP_PATH}/include -I${ROCM_PATH}/include ")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -amdgpu-target=gfx900 -amdgpu-target=gfx906 -amdgpu-target=gfx908")
+	# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -amdgpu-target=gfx900 -amdgpu-target=gfx906 -amdgpu-target=gfx908")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall ")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
     set(LD_FLAGS "-L${ROCM_PATH}/lib -L${ROCM_PATH}/opencl/lib/x86_64 -lMIOpen ")
 

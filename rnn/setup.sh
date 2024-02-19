@@ -17,4 +17,5 @@ for repo in "${repos[@]}"; do
     fi
 done
 
+# this tells the project to use compute_90 and sm_90, i.e. H100
 sed -i '41s/.*/SMS ?= 90/' cudnn_samples_v8/samples_common.mk

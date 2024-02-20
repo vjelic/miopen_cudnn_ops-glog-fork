@@ -3,7 +3,7 @@
 
 Follow these steps:
 
-1. Clone the repo and configure the correct `compute_#` and `sm_#` capability.
+1. Download and unzip the cuDNN samples.
 
 ```bash
 ./setup.sh

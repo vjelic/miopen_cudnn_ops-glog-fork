@@ -91,7 +91,7 @@ elif args.lib == 'cudnn':
     command = ['./RNN',
                '-dataType' + f'{dataType}',
                '-seqLength' + f'{args.seq_len}',
-               '-numLayers' + f'{args.datatype}',
+               '-numLayers' + f'{args.num_layer}',
                '-inputSize' + f'{args.in_h}',
                '-hiddenSize' + f'{args.hid_h}',
                '-projSize' + f'{args.hid_h}',
@@ -105,4 +105,5 @@ elif args.lib == 'cudnn':
                '-mathType' + '0',
                '-dropout' + f'{args.dropout}',
                '-printWeights' + '0']
+    print(' '.join(command))
     process = subprocess.run(command)

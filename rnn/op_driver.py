@@ -9,30 +9,30 @@ parser = argparse.ArgumentParser(description='Collect miopen and rocblas configu
 
 parser.add_argument('-lib', type=str, help='The library to use.', choices=['miopen', 'cudnn'], required=True)
 parser.add_argument('-op', '--operation', type=str, help='Base argument - the operation to be performed.', choices=['rnn', 'rnnfp16'], required=True)
-parser.add_argument('-F', '--forw', type=str, help='Run only Forward RNN == 1 or only Backward Data RNN == 2, Backward Weights = 4 or both == 0 (Default=0)', default=0)
-parser.add_argument('-H', '--hid_h', type=str, help='Hidden State Length (Default=32)', default=32)
-parser.add_argument('-L', '--seed_low', type=str, help='Least significant 32 bits of seed (Default=0)', default=0)
-parser.add_argument('-M', '--seed_high', type=str, help='Most significant 32 bits of seed (Default=0)', default=0)
-parser.add_argument('-P', '--dropout', type=str, help='Dropout rate (Default=0.0)', default=0.0)
-parser.add_argument('-U', '--use_dropout', type=str, help='Use dropout: 1; Not use dropout: 0 (Default=0)', default=0)
-parser.add_argument('-V', '--verify', type=str, help='Verify Each Layer (Default=1)', default=1)
-parser.add_argument('-W', '--in_h', type=str, help='Input Length (Default=32)', default=32)
-parser.add_argument('-a', '--rnnalgo', type=str, help='default, fundamental (Default=0)', default=0)
-parser.add_argument('-b', '--bias', type=str, help='Use Bias (Default=0)', default=0)
-parser.add_argument('-c', '--fwdtype', type=str, help='RNN forward being training or inference, Default training (Default=0)', default=0)
-parser.add_argument('-f', '--datatype', type=str, help='16-bit or 32-bit fp (Default=1)', default=1)
+parser.add_argument('-F', '--forw', type=int, help='Run only Forward RNN == 1 or only Backward Data RNN == 2, Backward Weights = 4 or both == 0 (Default=0)', default=0)
+parser.add_argument('-H', '--hid_h', type=int, help='Hidden State Length (Default=32)', default=32)
+parser.add_argument('-L', '--seed_low', type=int, help='Least significant 32 bits of seed (Default=0)', default=0)
+parser.add_argument('-M', '--seed_high', type=int, help='Most significant 32 bits of seed (Default=0)', default=0)
+parser.add_argument('-P', '--dropout', type=float, help='Dropout rate (Default=0.0)', default=0.0)
+parser.add_argument('-U', '--use_dropout', type=int, help='Use dropout: 1; Not use dropout: 0 (Default=0)', default=0)
+parser.add_argument('-V', '--verify', type=int, help='Verify Each Layer (Default=1)', default=1)
+parser.add_argument('-W', '--in_h', type=int, help='Input Length (Default=32)', default=32)
+parser.add_argument('-a', '--rnnalgo', type=int, help='default, fundamental (Default=0)', default=0)
+parser.add_argument('-b', '--bias', type=int, help='Use Bias (Default=0)', default=0)
+parser.add_argument('-c', '--fwdtype', type=int, help='RNN forward being training or inference, Default training (Default=0)', default=0)
+parser.add_argument('-f', '--datatype', type=int, help='16-bit or 32-bit fp (Default=1)', default=1)
 # parser.add_argument('-h', '--help', type=str, help='Print Help Message')
-parser.add_argument('-i', '--iter', type=str, help='Number of Iterations (Default=1)', default=1)
-parser.add_argument('-k', '--seq_len', type=str, help='Number of iterations to unroll over (Default=10)', default=10)
-parser.add_argument('-l', '--num_layer', type=str, help='Number of hidden stacks (Default=1)', default=1)
+parser.add_argument('-i', '--iter', type=int, help='Number of Iterations (Default=1)', default=1)
+parser.add_argument('-k', '--seq_len', type=int, help='Number of iterations to unroll over (Default=10)', default=10)
+parser.add_argument('-l', '--num_layer', type=int, help='Number of hidden stacks (Default=1)', default=1)
 parser.add_argument('-m', '--mode', type=str, help='RNN Mode (relu, tanh, lstm, gru) (Default=tanh)', default='tanh')
-parser.add_argument('-n', '--batchsize', type=str, help='Mini-batch size (Default=4)', default=4)
-parser.add_argument('-o', '--dump_output', type=str, help='Dumps the output buffers (Default=0)', default=0)
-parser.add_argument('-p', '--inputmode', type=str, help='linear == 0 or skip == 1, (Default=0)', default=0)
-parser.add_argument('-q', '--use_padding', type=str, help='packed tensors == 0 or padded == 1, (Default=0)', default=0)
-parser.add_argument('-r', '--bidirection', type=str, help='uni- or bi-direction, default uni- (Default=0)', default=0)
-parser.add_argument('-t', '--time', type=str, help='Time Each Layer (Default=0)', default=0)
-parser.add_argument('-w', '--wall', type=str, help='Wall-clock Time Each Layer, Requires time == 1 (Default=0)', default=0)
+parser.add_argument('-n', '--batchsize', type=int, help='Mini-batch size (Default=4)', default=4)
+parser.add_argument('-o', '--dump_output', type=int, help='Dumps the output buffers (Default=0)', default=0)
+parser.add_argument('-p', '--inputmode', type=int, help='linear == 0 or skip == 1, (Default=0)', default=0)
+parser.add_argument('-q', '--use_padding', type=int, help='packed tensors == 0 or padded == 1, (Default=0)', default=0)
+parser.add_argument('-r', '--bidirection', type=int, help='uni- or bi-direction, default uni- (Default=0)', default=0)
+parser.add_argument('-t', '--time', type=int, help='Time Each Layer (Default=0)', default=0)
+parser.add_argument('-w', '--wall', type=int, help='Wall-clock Time Each Layer, Requires time == 1 (Default=0)', default=0)
 
 # evaluate arguments
 args = parser.parse_args()
@@ -98,7 +98,7 @@ elif args.lib == 'cudnn':
                '-miniBatch' + f'{args.batchsize}',
                '-inputMode' + '1',
                '-dirMode' + f'{args.bidirection}',
-               '-cellMode' + '0',
+               '-cellMode' + '2',
                '-biasMode' + f'{bias}',
                '-algorithm' + f'{args.rnnalgo}',
                '-mathPrecision' + f'{dataType}',

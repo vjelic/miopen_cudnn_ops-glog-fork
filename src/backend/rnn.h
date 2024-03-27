@@ -78,9 +78,9 @@ class RNN_IMPL {
     cudnnHandle_t cudnnHandle;
     cudnnRNNDescriptor_t rnnDesc;
 
-    cudnnRNNDataLayout_t rnnDataLayout = CUDNN_RNN_DATA_LAYOUT_SEQ_MAJOR_PACKED;
-    cudnnForwardMode_t fwdMode = CUDNN_FWD_MODE_TRAINING;
-    cudnnWgradMode_t wgradMode = CUDNN_WGRAD_MODE_ADD;
+    cudnnRNNDataLayout_t rnnDataLayout;
+    cudnnForwardMode_t fwdMode;
+    cudnnWgradMode_t wgradMode;
 
     std::vector<int> seqLengthArray;
     int* devSeqLengthArray;

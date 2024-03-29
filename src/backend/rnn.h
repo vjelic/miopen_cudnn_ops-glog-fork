@@ -560,22 +560,26 @@ void RNN_IMPL<T>::validate()
     if (error & OUTPUT_SIZE)        std::cout << "outputSize must be less then or equal to the hiddenSize." << std::endl;
     if (error != 0) exit(error);
 
-    print_info("Arguments");
-    print_info("seqLength", seqLength);
-    print_info("numLayers", numLayers);
-    print_info("inputSize", inputSize);
-    print_info("hiddenSize", hiddenSize);
-    print_info("outputSize", outputSize);
-    print_info("miniBatch", miniBatch);
-    print_info("rnnInputMode", rnnInputMode, to_str(rnnInputMode));
-    print_info("recurrencePattern", recurrencePattern, to_str(recurrencePattern));
-    print_info("rnnCellMode", rnnCellMode, to_str(rnnCellMode));
-    print_info("rnnBiasMode", rnnBiasMode, to_str(rnnBiasMode));
-    print_info("rnnAlgorithm", rnnAlgorithm, to_str(rnnAlgorithm));
-    print_info("mathPrecision", mathPrecision, to_str(mathPrecision));
-    print_info("mathType", mathType, to_str(mathType));
-    print_info("dataType", dataType, to_str(dataType));
-    print_info("dropout", dropout);
+    bool debug = false;
+    if (debug)
+    {
+        print_info("Arguments");
+        print_info("seqLength", seqLength);
+        print_info("numLayers", numLayers);
+        print_info("inputSize", inputSize);
+        print_info("hiddenSize", hiddenSize);
+        print_info("outputSize", outputSize);
+        print_info("miniBatch", miniBatch);
+        print_info("rnnInputMode", rnnInputMode, to_str(rnnInputMode));
+        print_info("recurrencePattern", recurrencePattern, to_str(recurrencePattern));
+        print_info("rnnCellMode", rnnCellMode, to_str(rnnCellMode));
+        print_info("rnnBiasMode", rnnBiasMode, to_str(rnnBiasMode));
+        print_info("rnnAlgorithm", rnnAlgorithm, to_str(rnnAlgorithm));
+        print_info("mathPrecision", mathPrecision, to_str(mathPrecision));
+        print_info("mathType", mathType, to_str(mathType));
+        print_info("dataType", dataType, to_str(dataType));
+        print_info("dropout", dropout);
+    }
 }
 
 // TODO run init before rnn execution, outside run(...)

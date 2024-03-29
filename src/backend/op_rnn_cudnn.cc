@@ -18,13 +18,8 @@ void print_info(const std::string& str1,
     std::cout << std::endl;
 }
 
-void op_rnn_cudnn::tune_op(){}
-void op_rnn_cudnn::forward()
+void op_rnn_cudnn::tune_op()
 {
-    float timeForward = 0.0;
-    float timeBackwardData = 0.0;
-    float timeBackwardWeights = 0.0;
-
     if (dataType == CUDNN_DATA_FLOAT)
     {
         rnn = new RNN_IMPL<float>();
@@ -49,11 +44,6 @@ void op_rnn_cudnn::forward()
 
         rnn->init();
         rnn->validate();
-        timeForward = rnn->forward();
-        timeBackwardData = rnn->backward_data();
-        timeBackwardWeights = rnn->backward_filter();
-
-        delete rnn;
     }
     else if (dataType == CUDNN_DATA_HALF)
     {
@@ -79,29 +69,60 @@ void op_rnn_cudnn::forward()
 
         rnnfp16->init();
         rnnfp16->validate();
-        timeForward = rnnfp16->forward();
-        timeBackwardData = rnnfp16->backward_data();
-        timeBackwardWeights = rnnfp16->backward_filter();
-
-        delete rnnfp16;
     }
-
-    // display the measurements
-    std::cout << std::endl;
-    print_info("Results");
-    print_info("timeForward"        , timeForward, "ms");
-    print_info("timeBackwardData"   , timeBackwardData, "ms");
-    print_info("timeBackwardWeights", timeBackwardWeights, "ms");
 }
 
-void op_rnn_cudnn::backward_data(){}
-void op_rnn_cudnn::backward_filter(){}
+void op_rnn_cudnn::forward()
+{
+    if (dataType == CUDNN_DATA_FLOAT)
+    {
+        timeForward = rnn->forward();
+    }
+    else if (dataType == CUDNN_DATA_HALF)
+    {
+        timeForward = rnnfp16->forward();
+    }
+}
+
+void op_rnn_cudnn::backward_data()
+{
+    if (dataType == CUDNN_DATA_FLOAT)
+    {
+        timeBackwardData = rnn->backward_data();
+    }
+    else if (dataType == CUDNN_DATA_HALF)
+    {
+        timeBackwardData = rnnfp16->backward_data();
+    }
+}
+
+void op_rnn_cudnn::backward_filter()
+{
+    if (dataType == CUDNN_DATA_FLOAT)
+    {
+        timeBackwardWeights = rnn->backward_filter();
+    }
+    else if (dataType == CUDNN_DATA_HALF)
+    {
+        timeBackwardWeights = rnnfp16->backward_filter();
+    }
+}
+
 void op_rnn_cudnn::backward(){}
 
 std::string op_rnn_cudnn::get_fwd_algo_name() { return ""; }
 std::string op_rnn_cudnn::get_bwd_data_name() { return ""; }
 std::string op_rnn_cudnn::get_bwd_filter_name() { return ""; }
 
-void op_rnn_cudnn::print_fwd_time(const float kernel_average_time) {}
-void op_rnn_cudnn::print_bwd_time(const float kernel_average_time) {}
-void op_rnn_cudnn::print_wrw_time(const float kernel_average_time) {}
+void op_rnn_cudnn::print_fwd_time(const float kernel_average_time)
+{
+    print_info("timeForward"        , timeForward, "ms");
+}
+void op_rnn_cudnn::print_bwd_time(const float kernel_average_time)
+{
+    print_info("timeBackwardData"   , timeBackwardData, "ms");
+}
+void op_rnn_cudnn::print_wrw_time(const float kernel_average_time)
+{
+    print_info("timeBackwardWeights", timeBackwardWeights, "ms");
+}

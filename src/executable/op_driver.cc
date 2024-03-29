@@ -1223,7 +1223,7 @@ static int rnn_driver(int argc, char ** argv){
     // int datatype     = parser.get_arg_int("f"); //"1", "16-bit or 32-bit fp.", "int");
     int dropout         = parser.get_arg_int("P"); //"0.0", "Dropout rate.", "float");
     // int dump_output  = parser.get_arg_int("o"); //"0", "Dumps the output buffers.", "int");
-    // int forw         = parser.get_arg_int("F"); //"0", "Run only Forward RNN == 1 or only Backward Data RNN == 2, Backward Weights = 4 or all == 0.", "int");
+    int forw         = parser.get_arg_int("F"); //"0", "Run only Forward RNN == 1 or only Backward Data RNN == 2, Backward Weights = 4 or all == 0.", "int");
     // int fwdtype      = parser.get_arg_int("c"); //"0", "RNN forward being 0 training or 1 inference.", "int");
     int hid_h           = parser.get_arg_int("H"); //"32", "Hidden State Length.", "int");
     int in_h            = parser.get_arg_int("W"); //"32", "Input Length.", "int");
@@ -1235,16 +1235,16 @@ static int rnn_driver(int argc, char ** argv){
     // int seed_high    = parser.get_arg_int("M"); //"0", "Most significant 32 bits of seed.", "int");
     // int seed_low     = parser.get_arg_int("L"); //"0", "Least significant 32 bits of seed.", "int");
     int seq_len         = parser.get_arg_int("k"); //"10", "Number of iterations to unroll over.", "int");
-    // int time_enabled = parser.get_arg_int("t"); //"0", "Time Each Layer.", "int");
+    int time_enabled = parser.get_arg_int("t"); //"0", "Time Each Layer.", "int");
     int use_dropout     = parser.get_arg_int("U"); //"0", "Use dropout: 1; Not use dropout: 0.", "int");
     // int use_padding  = parser.get_arg_int("q"); //"0", "packed tensors == 0 or padded == 1.", "int");
     // int verify       = parser.get_arg_int("V"); //"1", "Verify Each Layer.", "int");
     // int wall         = parser.get_arg_int("w"); //"0", "Wall-clock Time Each Layer, Requires time == 1.", "int");
     std::string mode    = parser.get_arg("m"); //"tanh", "RNN Mode (relu, tanh, lstm, gru).", "str");
 
-    // int is_fwd = (forw == 0 || forw & 1) ? 1 : 0;
-    // int is_bwd = (forw == 0 || forw & 2) ? 1 : 0;
-    // int is_wrw = (forw == 0 || forw & 4) ? 1 : 0;
+    int is_fwd = (forw == 0 || forw & 1) ? 1 : 0;
+    int is_bwd = (forw == 0 || forw & 2) ? 1 : 0;
+    int is_wrw = (forw == 0 || forw & 4) ? 1 : 0;
 
     cudnnRNNMode_t cellMode = CUDNN_RNN_TANH;
     if (mode == "relu")
@@ -1257,99 +1257,75 @@ static int rnn_driver(int argc, char ** argv){
         cellMode = CUDNN_GRU;
 
     rnn_desc_t* rnn_desc = gpu_dev->rnn_desc_create();
-    operator_base* rnn_options = operator_create(gpu_dev, OP_RNN, rnn_desc);
+    operator_base* rnn_base = operator_create(gpu_dev, OP_RNN, rnn_desc);
     enum tensor_data_type tensor_dtype = get_tensor_type_t<dtype>::get();
 
     // // defalut arguments
-    // ((op_rnn*)rnn_options)->dataType            = (tensor_dtype == TENSOR_DT_FLOAT) ? CUDNN_DATA_FLOAT : CUDNN_DATA_HALF;
-    // ((op_rnn*)rnn_options)->seqLength           = 32;
-    // ((op_rnn*)rnn_options)->numLayers           = 8;
-    // ((op_rnn*)rnn_options)->inputSize           = 224;
-    // ((op_rnn*)rnn_options)->hiddenSize          = 1000;
-    // ((op_rnn*)rnn_options)->outputSize          = 1000;
-    // ((op_rnn*)rnn_options)->miniBatch           = 32;
-    // ((op_rnn*)rnn_options)->rnnInputMode        = CUDNN_LINEAR_INPUT;
-    // ((op_rnn*)rnn_options)->recurrencePattern   = CUDNN_UNIDIRECTIONAL;
-    // ((op_rnn*)rnn_options)->rnnCellMode         = CUDNN_LSTM;
-    // ((op_rnn*)rnn_options)->rnnBiasMode         = CUDNN_RNN_DOUBLE_BIAS;
-    // ((op_rnn*)rnn_options)->rnnAlgorithm        = CUDNN_RNN_ALGO_STANDARD;
-    // ((op_rnn*)rnn_options)->mathPrecision       = (tensor_dtype == TENSOR_DT_FLOAT) ? CUDNN_DATA_FLOAT : CUDNN_DATA_HALF;
-    // ((op_rnn*)rnn_options)->mathType            = CUDNN_DEFAULT_MATH;
-    // ((op_rnn*)rnn_options)->dropout             = 0.0;
-    // ((op_rnn*)rnn_options)->warmupIterations    = LOOP_WARMUP;
-    // ((op_rnn*)rnn_options)->measureIterations   = LOOP_ITR;
+    // ((op_rnn*)rnn_base)->dataType            = (tensor_dtype == TENSOR_DT_FLOAT) ? CUDNN_DATA_FLOAT : CUDNN_DATA_HALF;
+    // ((op_rnn*)rnn_base)->seqLength           = 32;
+    // ((op_rnn*)rnn_base)->numLayers           = 8;
+    // ((op_rnn*)rnn_base)->inputSize           = 224;
+    // ((op_rnn*)rnn_base)->hiddenSize          = 1000;
+    // ((op_rnn*)rnn_base)->outputSize          = 1000;
+    // ((op_rnn*)rnn_base)->miniBatch           = 32;
+    // ((op_rnn*)rnn_base)->rnnInputMode        = CUDNN_LINEAR_INPUT;
+    // ((op_rnn*)rnn_base)->recurrencePattern   = CUDNN_UNIDIRECTIONAL;
+    // ((op_rnn*)rnn_base)->rnnCellMode         = CUDNN_LSTM;
+    // ((op_rnn*)rnn_base)->rnnBiasMode         = CUDNN_RNN_DOUBLE_BIAS;
+    // ((op_rnn*)rnn_base)->rnnAlgorithm        = CUDNN_RNN_ALGO_STANDARD;
+    // ((op_rnn*)rnn_base)->mathPrecision       = (tensor_dtype == TENSOR_DT_FLOAT) ? CUDNN_DATA_FLOAT : CUDNN_DATA_HALF;
+    // ((op_rnn*)rnn_base)->mathType            = CUDNN_DEFAULT_MATH;
+    // ((op_rnn*)rnn_base)->dropout             = 0.0;
+    // ((op_rnn*)rnn_base)->warmupIterations    = LOOP_WARMUP;
+    // ((op_rnn*)rnn_base)->measureIterations   = LOOP_ITR;
 
     // user arguments
-    ((op_rnn*)rnn_options)->dataType            = (tensor_dtype == TENSOR_DT_FLOAT) ? CUDNN_DATA_FLOAT : CUDNN_DATA_HALF;
-    ((op_rnn*)rnn_options)->seqLength           = seq_len;
-    ((op_rnn*)rnn_options)->numLayers           = num_layer;
-    ((op_rnn*)rnn_options)->inputSize           = in_h;
-    ((op_rnn*)rnn_options)->hiddenSize          = hid_h;
-    ((op_rnn*)rnn_options)->outputSize          = hid_h;
-    ((op_rnn*)rnn_options)->miniBatch           = batchsize;
-    ((op_rnn*)rnn_options)->rnnInputMode        = cudnnRNNInputMode_t(inputmode);
-    ((op_rnn*)rnn_options)->recurrencePattern   = cudnnDirectionMode_t(bidirection);
-    ((op_rnn*)rnn_options)->rnnCellMode         = cellMode;
-    ((op_rnn*)rnn_options)->rnnBiasMode         = bias ? CUDNN_RNN_DOUBLE_BIAS : CUDNN_RNN_NO_BIAS;
-    ((op_rnn*)rnn_options)->rnnAlgorithm        = CUDNN_RNN_ALGO_STANDARD;
-    ((op_rnn*)rnn_options)->mathPrecision       = (tensor_dtype == TENSOR_DT_FLOAT) ? CUDNN_DATA_FLOAT : CUDNN_DATA_HALF;
-    ((op_rnn*)rnn_options)->mathType            = CUDNN_DEFAULT_MATH;
-    ((op_rnn*)rnn_options)->dropout             = use_dropout ? dropout : 0.0;
-    ((op_rnn*)rnn_options)->warmupIterations    = num_warmup;
-    ((op_rnn*)rnn_options)->measureIterations   = num_iterations;
+    ((op_rnn*)rnn_base)->dataType            = (tensor_dtype == TENSOR_DT_FLOAT) ? CUDNN_DATA_FLOAT : CUDNN_DATA_HALF;
+    ((op_rnn*)rnn_base)->seqLength           = seq_len;
+    ((op_rnn*)rnn_base)->numLayers           = num_layer;
+    ((op_rnn*)rnn_base)->inputSize           = in_h;
+    ((op_rnn*)rnn_base)->hiddenSize          = hid_h;
+    ((op_rnn*)rnn_base)->outputSize          = hid_h;
+    ((op_rnn*)rnn_base)->miniBatch           = batchsize;
+    ((op_rnn*)rnn_base)->rnnInputMode        = cudnnRNNInputMode_t(inputmode);
+    ((op_rnn*)rnn_base)->recurrencePattern   = cudnnDirectionMode_t(bidirection);
+    ((op_rnn*)rnn_base)->rnnCellMode         = cellMode;
+    ((op_rnn*)rnn_base)->rnnBiasMode         = bias ? CUDNN_RNN_DOUBLE_BIAS : CUDNN_RNN_NO_BIAS;
+    ((op_rnn*)rnn_base)->rnnAlgorithm        = CUDNN_RNN_ALGO_STANDARD;
+    ((op_rnn*)rnn_base)->mathPrecision       = (tensor_dtype == TENSOR_DT_FLOAT) ? CUDNN_DATA_FLOAT : CUDNN_DATA_HALF;
+    ((op_rnn*)rnn_base)->mathType            = CUDNN_DEFAULT_MATH;
+    ((op_rnn*)rnn_base)->dropout             = use_dropout ? dropout : 0.0;
+    ((op_rnn*)rnn_base)->warmupIterations    = num_warmup;
+    ((op_rnn*)rnn_base)->measureIterations   = num_iterations;
 
     // device_timer_t * dt = gpu_dev->device_timer_create();
 
-    // if (is_fwd) {
-    //     for(int l=0;l<num_warmup;l++){
-    //         rnn_options->forward();
-    //     }
-    //     dt->reset();
-    //     dt->start();
-    //     for(int l=0;l<num_iterations;l++){
-    //         rnn_options->forward();
-    //     }
-    //     dt->stop();
+    rnn_base->tune_op();
 
-    //     if (time_enabled)
-    //         rnn_options->print_fwd_time(dt->elapsed() / num_iterations);
-    // }
+    if (is_fwd) {
+        rnn_base->forward();
 
-    // if (is_bwd) {
-    //     for(int l=0;l<num_warmup;l++){
-    //         rnn_options->backward_data();
-    //     }
-    //     dt->reset();
-    //     dt->start();
-    //     for(int l=0;l<num_iterations;l++){
-    //         rnn_options->backward_data();
-    //     }
-    //     dt->stop();
+        if (time_enabled)
+            rnn_base->print_fwd_time(((op_rnn*)rnn_base)->timeForward);
+    }
 
-    //     if (time_enabled)
-    //         rnn_options->print_bwd_time(dt->elapsed() / num_iterations);
-    // }
+    if (is_bwd) {
+        rnn_base->backward_data();
 
-    // if (is_wrw) {
-    //     for(int l=0;l<num_warmup;l++){
-    //         rnn_options->backward_filter();
-    //     }
-    //     dt->reset();
-    //     dt->start();
-    //     for(int l=0;l<num_iterations;l++){
-    //         rnn_options->backward_filter();
-    //     }
-    //     dt->stop();
+        if (time_enabled)
+            rnn_base->print_bwd_time(((op_rnn*)rnn_base)->timeBackwardData);
+    }
 
-    //     if (time_enabled)
-    //         rnn_options->print_wrw_time(dt->elapsed() / num_iterations);
-    // }
+    if (is_wrw) {
+        rnn_base->backward_filter();
 
-    rnn_options->forward();
+        if (time_enabled)
+            rnn_base->print_wrw_time(((op_rnn*)rnn_base)->timeBackwardWeights);
+    }
 
     // clean
     // gpu_dev->device_timer_destroy(dt);
-    operator_destroy(rnn_options);
+    operator_destroy(rnn_base);
     gpu_dev->rnn_desc_destroy(rnn_desc);
 
     return 0;

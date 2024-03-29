@@ -257,11 +257,22 @@ public:
 
 class op_rnn : public operator_base{
 public:
-    op_rnn(void * desc)
+    op_rnn(void * desc) :
+        rnn(NULL),
+        rnnfp16(NULL),
+        timeForward(0.0),
+        timeBackwardData(0.0),
+        timeBackwardWeights(0.0)
     {
         rnn_desc = (rnn_desc_t*)desc;
     }
-    ~op_rnn() {}
+    ~op_rnn()
+    {
+        if (rnn != NULL)
+            delete rnn;
+        if (rnnfp16 != NULL)
+            delete rnnfp16;
+    }
 
     virtual void forward();
     virtual void backward();
@@ -280,6 +291,10 @@ public:
 
     RNN_IMPL<float>* rnn;
     RNN_IMPL<half>* rnnfp16;
+
+    float timeForward;
+    float timeBackwardData;
+    float timeBackwardWeights;
 
     // data type (0-FP32, 2-FP16)
     cudnnDataType_t dataType;

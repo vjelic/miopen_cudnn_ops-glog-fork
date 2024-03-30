@@ -6,18 +6,6 @@
 op_rnn_cudnn::op_rnn_cudnn(void * desc) : op_rnn(desc){}
 op_rnn_cudnn::~op_rnn_cudnn(){}
 
-void print_info(const std::string& str1,
-    const double& value = -1.0, const std::string& str2 = "")
-{
-    std::cout << std::right << std::setw(20) << str1  << ": ";
-    if (value != -1)
-    {
-        std::cout << std::right << std::setw(8) << std::setprecision(4) << value << " ";
-        std::cout << std::left  << std::setw(30) << str2  << " ";
-    }
-    std::cout << std::endl;
-}
-
 void op_rnn_cudnn::tune_op()
 {
     if (dataType == CUDNN_DATA_FLOAT)
@@ -116,13 +104,27 @@ std::string op_rnn_cudnn::get_bwd_filter_name() { return ""; }
 
 void op_rnn_cudnn::print_fwd_time(const float kernel_average_time)
 {
-    print_info("timeForward"        , timeForward, "ms");
+    std::cout << "GPU Kernel Time Forward RNN Elapsed: " << timeForward << " ms" << std::endl;
 }
 void op_rnn_cudnn::print_bwd_time(const float kernel_average_time)
 {
-    print_info("timeBackwardData"   , timeBackwardData, "ms");
+    std::cout << "GPU Kernel Time Backward Data RNN Elapsed: " << timeBackwardData << " ms" << std::endl;
 }
 void op_rnn_cudnn::print_wrw_time(const float kernel_average_time)
 {
-    print_info("timeBackwardWeights", timeBackwardWeights, "ms");
+    std::cout << "GPU Kernel Time Backward Weights RNN Elapsed: " << timeBackwardWeights << " ms" << std::endl;
 }
+
+/*/// reference MIOpenDriver output
+$ /opt/rocm-6.0.2/bin/MIOpenDriver rnn     -n 224 -W 224 -H 1000 -l 8 -b 1 -m lstm -p 0 -r 0 -k 32 -c 0 -F 0 -t 1 -w 1 -V 0
+MIOpenDriver rnn -n 224 -W 224 -H 1000 -l 8 -b 1 -m lstm -p 0 -r 0 -k 32 -c 0 -F 0 -t 1 -w 1 -V 0
+length of data sequence == 1 is short than time sequence == 32, padding the rest of data sequence with 224
+length of data sequence == 1 is short than time sequence == 32, padding the rest of data sequence with 224
+PRNG seed: 12345678
+GPU Kernel Time Forward RNN Elapsed: 0.000000 ms
+Wall-clock Time Forward RNN Elapsed: 4633.160645 ms
+GPU Kernel Time Backward Data RNN Elapsed: 0.000000 ms
+Wall-clock Time Backward Data RNN Elapsed: 161.234756 ms
+GPU Kernel Time Backward Weights RNN Elapsed: 0.000000 ms
+Wall-clock Time Backward Weights RNN Elapsed: 121.429344 ms
+//*///

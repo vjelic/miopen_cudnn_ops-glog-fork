@@ -104,15 +104,33 @@ std::string op_rnn_cudnn::get_bwd_filter_name() { return ""; }
 
 void op_rnn_cudnn::print_fwd_time(const float kernel_average_time)
 {
-    std::cout << "GPU Kernel Time Forward RNN Elapsed: " << timeForward << " ms" << std::endl;
+    std::cout << std::left;
+    std::cout << std::setw(46);
+    std::cout << "GPU Kernel Time Forward RNN Elapsed: ";
+    std::cout << std::setw(7);
+    std::cout << std::setprecision(5);
+    std::cout << timeForward << " ms";
+    std::cout << std::endl;
 }
 void op_rnn_cudnn::print_bwd_time(const float kernel_average_time)
 {
-    std::cout << "GPU Kernel Time Backward Data RNN Elapsed: " << timeBackwardData << " ms" << std::endl;
+    std::cout << std::left;
+    std::cout << std::setw(46);
+    std::cout << "GPU Kernel Time Backward Data RNN Elapsed: ";
+    std::cout << std::setw(7);
+    std::cout << std::setprecision(5);
+    std::cout << timeBackwardData << "ms";
+    std::cout << std::endl;
 }
 void op_rnn_cudnn::print_wrw_time(const float kernel_average_time)
 {
-    std::cout << "GPU Kernel Time Backward Weights RNN Elapsed: " << timeBackwardWeights << " ms" << std::endl;
+    std::cout << std::left;
+    std::cout << std::setw(46);
+    std::cout << "GPU Kernel Time Backward Weights RNN Elapsed: ";
+    std::cout << std::setw(7);
+    std::cout << std::setprecision(5);
+    std::cout << timeBackwardWeights << "ms";
+    std::cout << std::endl;
 }
 
 /*/// reference MIOpenDriver output

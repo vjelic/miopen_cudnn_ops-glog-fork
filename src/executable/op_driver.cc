@@ -1298,8 +1298,6 @@ static int rnn_driver(int argc, char ** argv){
     ((op_rnn*)rnn_base)->warmupIterations    = num_warmup;
     ((op_rnn*)rnn_base)->measureIterations   = num_iterations;
 
-    // device_timer_t * dt = gpu_dev->device_timer_create();
-
     rnn_base->tune_op();
 
     if (is_fwd) {
@@ -1323,8 +1321,7 @@ static int rnn_driver(int argc, char ** argv){
             rnn_base->print_wrw_time(((op_rnn*)rnn_base)->timeBackwardWeights);
     }
 
-    // clean
-    // gpu_dev->device_timer_destroy(dt);
+    // clean-up
     operator_destroy(rnn_base);
     gpu_dev->rnn_desc_destroy(rnn_desc);
 

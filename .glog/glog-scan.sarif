@@ -12,10 +12,10 @@
           "informationUri": "https://www.glog.ai",
           "rules": [
             {
-              "id": "9a1997b8-4d52-3676-97eb-5434f02f0098",
+              "id": "fedec4af-661a-3ff5-83cb-c9b67614d40b",
               "help": {
                 "text": "",
-                "markdown": "## Description\n\nThe `memcpy` function in C++ is used to copy a block of memory from one location to another. This function is vulnerable to buffer overflow attacks if the size of the data being copied is larger than the size of the destination buffer. In the provided code snippet, `memcpy(&out, &fbits, sizeof(float))`, there is a potential risk if the size of `fbits` is larger than `out`.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always ensure that the destination buffer is large enough to hold the data being copied. This can be done by checking the size of the source and destination buffers before calling `memcpy`. \n\n## Source Code Fix Recommendation\n\nHere is a recommended fix for the provided code snippet:\n\n```cpp\nif(sizeof(out) >= sizeof(fbits)) {\n    memcpy(&out, &fbits, sizeof(float));\n} else {\n    // Handle error\n}\n```\n\nIn this code, we first check if the size of `out` is larger or equal to the size of `fbits`. If it is, we proceed with the `memcpy`. If it's not, we handle the error in a way that is appropriate for the specific application.\n\n## Library Dependencies\n\nThe `memcpy` function is part of the C standard library, so no additional libraries are needed for the provided code snippet.\n\n## OWASP and CWE Links\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)"
+                "markdown": "This finding is classified as a genuine vulnerability because the analysis identified a risk of undefined behavior due to possible overlap between the source and destination memory regions in the memory copy operation. The destination and source expressions are both addresses, and dataflow analysis suggests that the destination may alias the source. Additionally, the analysis could not rule out the possibility that the source pointer is null, which further increases the risk. There are no explicit guards or checks to prevent overlap or null pointer dereference. The classification and verdict both indicate a high-confidence issue that should be addressed to prevent undefined behavior and potential security vulnerabilities.\n\n## In Context Remediation\nTo prevent undefined behavior when copying memory, ensure that the source and destination memory regions do not overlap. If there is any possibility of overlap, use `std::memmove` instead of `std::memcpy`, as `std::memmove` is designed to handle overlapping regions safely. For example, replace the original call with:\n\n```cpp\nstd::memmove(&dbits, &value, sizeof(double));\n```\n\nAlternatively, if you can guarantee that the source and destination do not overlap, document this assumption clearly in the code and add assertions to enforce it at runtime:\n\n```cpp\nassert(&dbits != &value);\nstd::memcpy(&dbits, &value, sizeof(double));\n```\n\nIf the source pointer could be null, add a check before the copy:\n\n```cpp\nif (&value != nullptr) {\n    std::memcpy(&dbits, &value, sizeof(double));\n}\n```\n\n## References\n- [OWASP C-Based Toolchain Hardening Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-119: Improper Restriction of Operations within the Bounds of a Memory Buffer](https://cwe.mitre.org/data/definitions/119.html)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)\n- [CWE-787: Out-of-bounds Write](https://cwe.mitre.org/data/definitions/787.html)\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n\n___\n"
               },
               "properties": {
                 "tags": [
@@ -36,78 +36,6 @@
               }
             },
             {
-              "id": "38c79a5f-ece1-3bbb-ae03-cc3f2ed7e568",
-              "help": {
-                "text": "",
-                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability in C++ refers to the use of certain C standard library functions that are considered unsafe due to their potential to cause buffer overflows, format string vulnerabilities, or other issues that can lead to arbitrary code execution or denial of service. In this case, the function `atof()` is used, which converts a string to a floating-point number. This function does not perform any error checking, so if the string cannot be converted into a float, it will return zero, which can lead to unexpected behavior.\n\n## Mitigation Advice\n\nAvoid using C standard library functions that do not perform bounds checking or error checking. Instead, use safer alternatives provided by the C++ standard library. In this case, you can use `std::stof()` or `std::stod()` functions, which throw an exception if the conversion fails.\n\n## Source Code Fix Recommendation\n\nReplace the `atof()` function with `std::stof()` or `std::stod()`. Here is how you can do it:\n\n```cpp\ntry {\n    float val_float = std::stof(val);\n} catch (std::invalid_argument& e) {\n    // handle error\n} catch (std::out_of_range& e) {\n    // handle error\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n```cpp\n#include <string>\n```\n\n## References\n\n- [CWE-242: Use of Inherently Dangerous Function](https://cwe.mitre.org/data/definitions/242.html)"
-              },
-              "properties": {
-                "tags": [
-                  "DS154189"
-                ]
-              }
-            },
-            {
-              "id": "4ba796c1-a5df-360c-928e-59144860ee0e",
-              "help": {
-                "text": "",
-                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions that can lead to various security issues such as buffer overflows, format string vulnerabilities, or integer overflows. In this case, the `getenv` function is used, which can lead to security vulnerabilities. The `getenv` function returns a pointer to a string that is associated with the matched environment variable name. This can be problematic because the returned string can be overwritten by subsequent calls to `getenv`, `setenv`, or `putenv`.\n\n## Mitigation Advice\n\nAvoid using the `getenv` function. If you need to use environment variables, consider using a safer alternative that does not have the same vulnerabilities. Always validate and sanitize input and output data. \n\n## Source Code Fix Recommendation\n\nInstead of using `getenv`, consider using a safer alternative. For example, you can use the `secure_getenv` function if it's available on your system:\n\n```cpp\n#include <stdlib.h>\n\nconst char* env_value = secure_getenv(env_name);\nif (env_value == NULL) {\n    // Handle error\n}\n```\n\n## Library Dependencies\n\nThe code example requires the `stdlib.h` library.\n\n## References\n\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)"
-              },
-              "properties": {
-                "tags": [
-                  "DS154189"
-                ]
-              }
-            },
-            {
-              "id": "a00a9da8-f324-3979-bb63-7c6703bb89ae",
-              "help": {
-                "text": "",
-                "markdown": "## Description\n\n\"Prohibited C Function Identified\" is a vulnerability that arises when a program uses a function that is considered unsafe due to its potential for causing buffer overflows, format string vulnerabilities, or other types of security issues. In this case, the function `atoi()` is used, which is a standard library function in C++ that converts a string to an integer. The `atoi()` function does not perform any error checking, so if the input string is not a valid integer, the behavior of the function is undefined, which can lead to unexpected results and potential security vulnerabilities.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use safer alternatives to `atoi()`, such as `strtol()` or `sscanf()`, which provide error checking. Additionally, always validate and sanitize input data before processing it to prevent injection attacks.\n\n## Source Code Fix Recommendation\n\nReplace the `atoi()` function with a safer alternative. Here is an example of how to do this with `strtol()`:\n\n```cpp\n#include <cstdlib>\n#include <cerrno>\n\nconst char* env_value = getenv(\"ENV_VAR\");\nchar* endptr;\nlong int_value = strtol(env_value, &endptr, 10);\n\nif (endptr == env_value || *endptr != '\\0' || errno == ERANGE) {\n    // handle the error, the input was not a valid integer\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `<cstdlib>`: for `strtol()`\n- `<cerrno>`: for `errno`\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-242: Use of Inherently Dangerous Function](https://cwe.mitre.org/data/definitions/242.html)"
-              },
-              "properties": {
-                "tags": [
-                  "DS154189"
-                ]
-              }
-            },
-            {
-              "id": "f3f26ee4-ea14-3fee-82f6-db6c0ff3594a",
-              "help": {
-                "text": "",
-                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions that can lead to various security issues such as buffer overflows, format string vulnerabilities, or integer overflows. In this case, the `getenv` function is used, which can lead to security vulnerabilities. The `getenv` function returns a pointer to a string that is associated with the matched environment variable name. This can be problematic because the returned string can be overwritten by subsequent calls to `getenv`, `setenv`, or `putenv`.\n\n## Mitigation Advice\n\nAvoid using the `getenv` function. If you need to use environment variables, consider using a safer alternative that does not have the same vulnerabilities. Always validate and sanitize input and output data. \n\n## Source Code Fix Recommendation\n\nInstead of using `getenv`, consider using a safer alternative. For example, you can use the `secure_getenv` function if it's available on your system:\n\n```cpp\n#include <stdlib.h>\n\nconst char* env_value = secure_getenv(env_name);\nif (env_value == NULL) {\n    // Handle error\n}\n```\n\n## Library Dependencies\n\nThe code example requires the `stdlib.h` library.\n\n## References\n\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)"
-              },
-              "properties": {
-                "tags": [
-                  "DS154189"
-                ]
-              }
-            },
-            {
-              "id": "fedec4af-661a-3ff5-83cb-c9b67614d40b",
-              "help": {
-                "text": "",
-                "markdown": "This finding is classified as a genuine vulnerability because the analysis identified a risk of undefined behavior due to possible overlap between the source and destination memory regions in the memory copy operation. The destination and source expressions are both addresses, and dataflow analysis suggests that the destination may alias the source. Additionally, the analysis could not rule out the possibility that the source pointer is null, which further increases the risk. There are no explicit guards or checks to prevent overlap or null pointer dereference. The classification and verdict both indicate a high-confidence issue that should be addressed to prevent undefined behavior and potential security vulnerabilities.\n\n## In Context Remediation\nTo prevent undefined behavior when copying memory, ensure that the source and destination memory regions do not overlap. If there is any possibility of overlap, use `std::memmove` instead of `std::memcpy`, as `std::memmove` is designed to handle overlapping regions safely. For example, replace the original call with:\n\n```cpp\nstd::memmove(&dbits, &value, sizeof(double));\n```\n\nAlternatively, if you can guarantee that the source and destination do not overlap, document this assumption clearly in the code and add assertions to enforce it at runtime:\n\n```cpp\nassert(&dbits != &value);\nstd::memcpy(&dbits, &value, sizeof(double));\n```\n\nIf the source pointer could be null, add a check before the copy:\n\n```cpp\nif (&value != nullptr) {\n    std::memcpy(&dbits, &value, sizeof(double));\n}\n```\n\n## References\n- [OWASP C-Based Toolchain Hardening Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-119: Improper Restriction of Operations within the Bounds of a Memory Buffer](https://cwe.mitre.org/data/definitions/119.html)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)\n- [CWE-787: Out-of-bounds Write](https://cwe.mitre.org/data/definitions/787.html)\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n\n___\n"
-              },
-              "properties": {
-                "tags": [
-                  "DS121708"
-                ]
-              }
-            },
-            {
-              "id": "6ec6c6e4-6761-3c52-8d36-5ea03ec33d0f",
-              "help": {
-                "text": "",
-                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability in C++ refers to the use of insecure C library functions that can lead to various security issues such as buffer overflows, format string vulnerabilities, or integer overflows. In this case, the function `getenv()` is used, which can lead to security vulnerabilities. The `getenv()` function returns a pointer to a string that is associated with the matched environment variable name. This can lead to information disclosure or code execution vulnerabilities if the environment variable is controlled by an attacker.\n\n## Mitigation Advice\n\nAvoid using insecure C library functions. Instead, use safer alternatives provided by the C++ Standard Library. In this case, consider using the `std::getenv` function from the C++ Standard Library, which is generally safer than the C-style `getenv()` function. \n\n## Source Code Fix Recommendation\n\n```cpp\n#include <cstdlib> // for std::getenv\n\nconst char* device_id = std::getenv(\"DEVICE_ID\");\nif (device_id) {\n    var = device_id;\n} else {\n    // Handle the case where DEVICE_ID is not set in the environment\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n- `<cstdlib>`: This header defines several general purpose functions, including dynamic memory management, random number generation, communication with the environment, integer arithmetics, searching, sorting and converting.\n\n## References\n\n- [OWASP C++](https://owasp.org/www-pdf-archive/OWASP_SCP_v2.pdf)\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)"
-              },
-              "properties": {
-                "tags": [
-                  "DS154189"
-                ]
-              }
-            },
-            {
               "id": "c726c202-6be5-3b8a-9093-1e341a97e7df",
               "help": {
                 "text": "",
@@ -120,46 +48,22 @@
               }
             },
             {
-              "id": "3ea78b17-2d4a-32ee-94ec-846c1df4e3ac",
+              "id": "9a1997b8-4d52-3676-97eb-5434f02f0098",
               "help": {
                 "text": "",
-                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, integer overflow, etc. In this case, the function `atoi()` is used, which can lead to integer overflow or underflow if the input string represents a number outside the range of representable integer values.\n\n## Mitigation Advice\n\nAvoid using C library functions that do not perform bounds checking or that are susceptible to integer overflows, underflows, or other types of vulnerabilities. Instead, use safer alternatives provided by the C++ Standard Library. \n\n## Source Code Fix Recommendation\n\nReplace the `atoi()` function with `std::stoi()`, which throws an exception if the converted value would fall out of the range of the result type or if the underlying function reports an error.\n\n```cpp\n#include <string>\n\ntry {\n    int val = std::stoi(val_string);\n} catch (const std::out_of_range& e) {\n    // Handle the exception\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n- `<string>`\n\n## References\n\n- [OWASP C++](https://owasp.org/www-pdf-archive/OWASP_SCP_v2.pdf)\n- [CWE-681: Incorrect Conversion between Numeric Types](https://cwe.mitre.org/data/definitions/681.html)"
+                "markdown": "## Description\n\nThe `memcpy` function in C++ is used to copy a block of memory from one location to another. This function is vulnerable to buffer overflow attacks if the size of the data being copied is larger than the size of the destination buffer. In the provided code snippet, `memcpy(&out, &fbits, sizeof(float))`, there is a potential risk if the size of `fbits` is larger than `out`.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always ensure that the destination buffer is large enough to hold the data being copied. This can be done by checking the size of the source and destination buffers before calling `memcpy`. \n\n## Source Code Fix Recommendation\n\nHere is a recommended fix for the provided code snippet:\n\n```cpp\nif(sizeof(out) >= sizeof(fbits)) {\n    memcpy(&out, &fbits, sizeof(float));\n} else {\n    // Handle error\n}\n```\n\nIn this code, we first check if the size of `out` is larger or equal to the size of `fbits`. If it is, we proceed with the `memcpy`. If it's not, we handle the error in a way that is appropriate for the specific application.\n\n## Library Dependencies\n\nThe `memcpy` function is part of the C standard library, so no additional libraries are needed for the provided code snippet.\n\n## OWASP and CWE Links\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)"
               },
               "properties": {
                 "tags": [
-                  "DS154189"
+                  "DS121708"
                 ]
               }
             },
             {
-              "id": "8b6b424b-11d3-3c98-bef9-ee102baa9771",
+              "id": "157dc3d6-4d46-3524-8aad-9aa38b0bd666",
               "help": {
                 "text": "",
-                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, or integer overflows. In this case, the function `atoi()` is used, which can lead to integer overflow if the input string represents a number larger than `INT_MAX`.\n\n## Mitigation Advice\n\nAvoid using C library functions that do not perform bounds checking or input validation. Instead, use safer alternatives provided by the C++ Standard Library. For `atoi()`, a safer alternative is `std::stoi()`, which throws an exception if the input string cannot be converted to an integer or if the converted value is out of the range of representable values by an `int`.\n\n## Source Code Fix Recommendation\n\nReplace the `atoi()` function with `std::stoi()`. Make sure to handle the possible exceptions.\n\n```cpp\n#include <string>\n#include <cstdlib>\n\ntry {\n    device_id = std::stoi(var);\n} catch (const std::invalid_argument& ia) {\n    // Handle the case where 'var' cannot be converted to an integer\n} catch (const std::out_of_range& oor) {\n    // Handle the case where the converted value is out of the range of representable values by an 'int'\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `<string>`: for `std::stoi()`\n- `<cstdlib>`: for `std::invalid_argument` and `std::out_of_range`\n\n## References\n\n- [CWE-190: Integer Overflow or Wraparound](https://cwe.mitre.org/data/definitions/190.html)"
-              },
-              "properties": {
-                "tags": [
-                  "DS154189"
-                ]
-              }
-            },
-            {
-              "id": "1eae59da-ad1f-30c5-814e-52e875141ee5",
-              "help": {
-                "text": "",
-                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, or other types of security issues. In this case, the function `getenv()` is used, which can lead to security vulnerabilities if the environment variable it retrieves is controlled by an attacker.\n\nThe `getenv()` function returns a pointer to a string that is associated with the matched environment variable name. If the specified environment variable is not found, the function returns a null pointer. If an attacker can control the environment, they can manipulate the return value of `getenv()`, potentially leading to security issues.\n\n## Mitigation Advice\n\nAvoid using `getenv()` function in your code. If you need to use environment variables, consider safer alternatives that allow for better control and validation of the data. Always validate and sanitize the data retrieved from environment variables.\n\n## Source Code Fix Recommendation\n\nInstead of using `getenv()`, consider using a safer alternative. For example, you can use the `std::getenv()` function from the C++ standard library, which is considered safer. However, you still need to validate and sanitize the data retrieved from the environment variable.\n\n```cpp\n#include <cstdlib>\n\nconst char* value = std::getenv(\"BACKEND\");\nif (value == nullptr) {\n    // Handle the case where the environment variable does not exist.\n} else {\n    // Validate and sanitize 'value' before using it.\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n- `<cstdlib>`: This is a C++ standard library that provides general purpose functions, including the `std::getenv()` function.\n\n## References\n\n- [OWASP C++](https://owasp.org/www-pdf-archive/OWASP_SCP_v2.pdf)\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)"
-              },
-              "properties": {
-                "tags": [
-                  "DS154189"
-                ]
-              }
-            },
-            {
-              "id": "387c23bd-44de-3c9c-ab60-c9b3855030a2",
-              "help": {
-                "text": "",
-                "markdown": "## Description\n\nThe \"Prohibited C Function Identified\" vulnerability refers to the use of certain C functions that are considered unsafe due to their potential to cause buffer overflows, format string vulnerabilities, or other security issues. In this case, the `printf` function is used, which can lead to format string vulnerabilities if user-controlled input is passed as the format string.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use safer alternatives to the `printf` function. For instance, you can use `printf_s`, `snprintf`, or `fprintf` functions, which are safer as they include the size of the buffer as an argument, preventing buffer overflow vulnerabilities.\n\n## Source Code Fix Recommendation\n\nHere is a fixed version of the code:\n\n```cpp\n#include <cstdio>\n\n// ...\n\nchar buffer[256];\nsnprintf(buffer, sizeof(buffer), \"stats: name, n, c, ho, wo, x, y, k, flopCnt, bytesRead, bytesWritten, GFLOPs, GB/s, timeMs\\n\");\n```\n\n## Library Dependencies\n\nThe code example requires the `cstdio` library.\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)"
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, or other types of security issues. In this case, the function `getenv()` is used, which can lead to security vulnerabilities if the environment variable it retrieves is controlled by an attacker.\n\nThe `getenv()` function returns a pointer to a string that is associated with the matched environment variable name passed as input. If the specified environment variable is not found, the function returns a null pointer. If an attacker can control the environment, they can manipulate the output of `getenv()`.\n\n## Mitigation Advice\n\nAvoid using `getenv()` function in your code. If you must use it, ensure that the environment in which your application runs is secure and that untrusted users cannot modify environment variables.\n\n## Source Code Fix Recommendation\n\nIf you need to use an environment variable, consider using a safer alternative to `getenv()`, such as `secure_getenv()`. This function behaves the same as `getenv()` but returns NULL if the process is being run with elevated privileges. This can help prevent privilege escalation attacks.\n\n```cpp\n#include <stdlib.h>\n\n// ...\n\nvar = secure_getenv(\"VERBOSE_DEVICE\");\n```\n\n## Library Dependencies\n\nThe `getenv()` function is part of the C standard library, so you need to include `stdlib.h`.\n\n## References\n\n- [OWASP C++](https://owasp.org/www-pdf-archive/OWASP_SCP_v2.pdf)\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)\n\nPlease note that the links provided are accessible to anonymous users at the time of writing this report."
               },
               "properties": {
                 "tags": [
@@ -184,78 +88,6 @@
               "help": {
                 "text": "",
                 "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions that can lead to various security issues such as buffer overflows, format string vulnerabilities, or integer overflows. In the provided code snippet, the `fopen` function is used, which can lead to vulnerabilities if the file name or path is manipulated by an attacker.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use safer alternatives to these functions. For instance, instead of `fopen`, consider using `fopen_s` which is a safer version of `fopen`. Also, always validate and sanitize inputs that are used in these functions to prevent any malicious manipulation.\n\n## Source Code Fix Recommendation\n\nHere is a safer version of the provided code snippet:\n\n```cpp\nerrno_t err;\nFILE *fp;\nerr = fopen_s(&fp, \"conv_log.csv\", \"a\");\nif (err == 0) {\n    // File was opened successfully\n} else {\n    // File could not be opened\n}\n```\n\n## Library Dependencies\n\nThe code example requires the `stdio.h` library to execute properly.\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)"
-              },
-              "properties": {
-                "tags": [
-                  "DS154189"
-                ]
-              }
-            },
-            {
-              "id": "6b19836d-c559-3cd9-9d62-9a3229b6b997",
-              "help": {
-                "text": "",
-                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, or other types of security issues. In this case, the function `getenv()` is used, which can lead to security vulnerabilities if the environment variable it retrieves is controlled by an attacker.\n\nThe `getenv()` function returns a pointer to a string that is associated with the matched environment variable name passed as input. If the specified environment variable is not found, the function returns a null pointer. If an attacker can control the environment, they can manipulate the output of `getenv()`.\n\n## Mitigation Advice\n\nAvoid using `getenv()` function in your code. If you must use it, ensure that the environment in which your application runs is secure and that untrusted users cannot modify environment variables.\n\n## Source Code Fix Recommendation\n\nIf you need to use an environment variable, consider using a safer alternative to `getenv()`, such as `secure_getenv()`. This function behaves the same as `getenv()` but returns NULL if the process is being run with elevated privileges. This can help prevent privilege escalation attacks.\n\n```cpp\n#include <stdlib.h>\n\n// ...\n\nvar = secure_getenv(\"VERBOSE_DEVICE\");\n```\n\n## Library Dependencies\n\nThe `getenv()` function is part of the C standard library, so you need to include `stdlib.h`.\n\n## References\n\n- [OWASP C++](https://owasp.org/www-pdf-archive/OWASP_SCP_v2.pdf)\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)\n\nPlease note that the links provided are accessible to anonymous users at the time of writing this report."
-              },
-              "properties": {
-                "tags": [
-                  "DS154189"
-                ]
-              }
-            },
-            {
-              "id": "f279adef-0f72-3ba4-a333-7aba79c59f25",
-              "help": {
-                "text": "",
-                "markdown": "## Description\n\nThe \"Prohibited C Function Identified\" vulnerability refers to the use of certain C functions that are considered unsafe due to their potential to cause buffer overflows, format string vulnerabilities, or other security issues. In this case, the `printf` function is used, which can lead to format string vulnerabilities if user-controlled input is passed as the format string.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use safer alternatives to the `printf` function. For instance, you can use `printf_s`, `snprintf`, or `fprintf` functions, which are safer as they include the size of the buffer as an argument, preventing buffer overflow vulnerabilities.\n\n## Source Code Fix Recommendation\n\nHere is a fixed version of the code:\n\n```cpp\n#include <cstdio>\n\n// ...\n\nchar buffer[256];\nsnprintf(buffer, sizeof(buffer), \"stats: name, n, c, ho, wo, x, y, k, flopCnt, bytesRead, bytesWritten, GFLOPs, GB/s, timeMs\\n\");\n```\n\n## Library Dependencies\n\nThe code example requires the `cstdio` library.\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)"
-              },
-              "properties": {
-                "tags": [
-                  "DS154189"
-                ]
-              }
-            },
-            {
-              "id": "1d8e80a7-ec16-3ac8-a152-8e7e1d2a65bf",
-              "help": {
-                "text": "",
-                "markdown": "## Description\n\nThe \"Prohibited C Function Identified\" vulnerability refers to the use of certain C functions that are considered unsafe due to their potential to cause buffer overflows, format string vulnerabilities, or other security issues. In this case, the `printf` function is used, which can lead to format string vulnerabilities if user-controlled input is passed as the format string.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use safer alternatives to the `printf` function. For instance, you can use `printf_s`, `snprintf`, or `fprintf` functions, which are safer as they include the size of the buffer as an argument, preventing buffer overflow vulnerabilities.\n\n## Source Code Fix Recommendation\n\nHere is a fixed version of the code:\n\n```cpp\n#include <cstdio>\n\n// ...\n\nchar buffer[256];\nsnprintf(buffer, sizeof(buffer), \"stats: name, n, c, ho, wo, x, y, k, flopCnt, bytesRead, bytesWritten, GFLOPs, GB/s, timeMs\\n\");\n```\n\n## Library Dependencies\n\nThe code example requires the `cstdio` library.\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)"
-              },
-              "properties": {
-                "tags": [
-                  "DS154189"
-                ]
-              }
-            },
-            {
-              "id": "157dc3d6-4d46-3524-8aad-9aa38b0bd666",
-              "help": {
-                "text": "",
-                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, or other types of security issues. In this case, the function `getenv()` is used, which can lead to security vulnerabilities if the environment variable it retrieves is controlled by an attacker.\n\nThe `getenv()` function returns a pointer to a string that is associated with the matched environment variable name passed as input. If the specified environment variable is not found, the function returns a null pointer. If an attacker can control the environment, they can manipulate the output of `getenv()`.\n\n## Mitigation Advice\n\nAvoid using `getenv()` function in your code. If you must use it, ensure that the environment in which your application runs is secure and that untrusted users cannot modify environment variables.\n\n## Source Code Fix Recommendation\n\nIf you need to use an environment variable, consider using a safer alternative to `getenv()`, such as `secure_getenv()`. This function behaves the same as `getenv()` but returns NULL if the process is being run with elevated privileges. This can help prevent privilege escalation attacks.\n\n```cpp\n#include <stdlib.h>\n\n// ...\n\nvar = secure_getenv(\"VERBOSE_DEVICE\");\n```\n\n## Library Dependencies\n\nThe `getenv()` function is part of the C standard library, so you need to include `stdlib.h`.\n\n## References\n\n- [OWASP C++](https://owasp.org/www-pdf-archive/OWASP_SCP_v2.pdf)\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)\n\nPlease note that the links provided are accessible to anonymous users at the time of writing this report."
-              },
-              "properties": {
-                "tags": [
-                  "DS154189"
-                ]
-              }
-            },
-            {
-              "id": "6b4714db-f149-3e51-8f5a-617d97fd1530",
-              "help": {
-                "text": "",
-                "markdown": "## Description\n\nThe \"Prohibited C Function Identified\" vulnerability refers to the use of certain C functions that are considered unsafe due to their potential to cause buffer overflows, format string vulnerabilities, or other security issues. In this case, the `printf` function is used, which can lead to format string vulnerabilities if user-controlled input is passed as the format string.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use safer alternatives to the `printf` function. For instance, you can use `printf_s`, `snprintf`, or `fprintf` functions, which are safer as they include the size of the buffer as an argument, preventing buffer overflow vulnerabilities.\n\n## Source Code Fix Recommendation\n\nHere is a fixed version of the code:\n\n```cpp\n#include <cstdio>\n\n// ...\n\nchar buffer[256];\nsnprintf(buffer, sizeof(buffer), \"stats: name, n, c, ho, wo, x, y, k, flopCnt, bytesRead, bytesWritten, GFLOPs, GB/s, timeMs\\n\");\n```\n\n## Library Dependencies\n\nThe code example requires the `cstdio` library.\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)"
-              },
-              "properties": {
-                "tags": [
-                  "DS154189"
-                ]
-              }
-            },
-            {
-              "id": "869a6cb7-7a9f-3f8b-a5b2-2df5be402248",
-              "help": {
-                "text": "",
-                "markdown": "## Description\n\nThe \"Prohibited C Function Identified\" vulnerability refers to the use of certain C functions that are considered unsafe due to their potential to cause buffer overflows, format string vulnerabilities, or other security issues. In this case, the `printf` function is used, which can lead to format string vulnerabilities if user-controlled input is passed as the format string.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use safer alternatives to the `printf` function. For instance, you can use `printf_s`, `snprintf`, or `fprintf` functions, which are safer as they include the size of the buffer as an argument, preventing buffer overflow vulnerabilities.\n\n## Source Code Fix Recommendation\n\nHere is a fixed version of the code:\n\n```cpp\n#include <cstdio>\n\n// ...\n\nchar buffer[256];\nsnprintf(buffer, sizeof(buffer), \"stats: name, n, c, ho, wo, x, y, k, flopCnt, bytesRead, bytesWritten, GFLOPs, GB/s, timeMs\\n\");\n```\n\n## Library Dependencies\n\nThe code example requires the `cstdio` library.\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)"
               },
               "properties": {
                 "tags": [
@@ -300,10 +132,106 @@
               }
             },
             {
-              "id": "5175f65d-6c0f-3e47-85fa-5b8cdde2204a",
+              "id": "38c79a5f-ece1-3bbb-ae03-cc3f2ed7e568",
               "help": {
                 "text": "",
-                "markdown": "## Description\n\nThe \"Prohibited C Function Identified\" vulnerability refers to the use of certain C functions that are considered unsafe due to their potential to cause buffer overflows, format string vulnerabilities, or other security issues. In this case, the `printf` function is used, which can lead to format string vulnerabilities if user-controlled input is passed as the format string.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use safer alternatives to the `printf` function. For instance, you can use `printf_s`, `snprintf`, or `fprintf` functions, which are safer as they include the size of the buffer as an argument, preventing buffer overflow vulnerabilities.\n\n## Source Code Fix Recommendation\n\nHere is a fixed version of the code:\n\n```cpp\n#include <cstdio>\n\n// ...\n\nchar buffer[256];\nsnprintf(buffer, sizeof(buffer), \"stats: name, n, c, ho, wo, x, y, k, flopCnt, bytesRead, bytesWritten, GFLOPs, GB/s, timeMs\\n\");\n```\n\n## Library Dependencies\n\nThe code example requires the `cstdio` library.\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)"
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability in C++ refers to the use of certain C standard library functions that are considered unsafe due to their potential to cause buffer overflows, format string vulnerabilities, or other issues that can lead to arbitrary code execution or denial of service. In this case, the function `atof()` is used, which converts a string to a floating-point number. This function does not perform any error checking, so if the string cannot be converted into a float, it will return zero, which can lead to unexpected behavior.\n\n## Mitigation Advice\n\nAvoid using C standard library functions that do not perform bounds checking or error checking. Instead, use safer alternatives provided by the C++ standard library. In this case, you can use `std::stof()` or `std::stod()` functions, which throw an exception if the conversion fails.\n\n## Source Code Fix Recommendation\n\nReplace the `atof()` function with `std::stof()` or `std::stod()`. Here is how you can do it:\n\n```cpp\ntry {\n    float val_float = std::stof(val);\n} catch (std::invalid_argument& e) {\n    // handle error\n} catch (std::out_of_range& e) {\n    // handle error\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n```cpp\n#include <string>\n```\n\n## References\n\n- [CWE-242: Use of Inherently Dangerous Function](https://cwe.mitre.org/data/definitions/242.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "4ba796c1-a5df-360c-928e-59144860ee0e",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions that can lead to various security issues such as buffer overflows, format string vulnerabilities, or integer overflows. In this case, the `getenv` function is used, which can lead to security vulnerabilities. The `getenv` function returns a pointer to a string that is associated with the matched environment variable name. This can be problematic because the returned string can be overwritten by subsequent calls to `getenv`, `setenv`, or `putenv`.\n\n## Mitigation Advice\n\nAvoid using the `getenv` function. If you need to use environment variables, consider using a safer alternative that does not have the same vulnerabilities. Always validate and sanitize input and output data. \n\n## Source Code Fix Recommendation\n\nInstead of using `getenv`, consider using a safer alternative. For example, you can use the `secure_getenv` function if it's available on your system:\n\n```cpp\n#include <stdlib.h>\n\nconst char* env_value = secure_getenv(env_name);\nif (env_value == NULL) {\n    // Handle error\n}\n```\n\n## Library Dependencies\n\nThe code example requires the `stdlib.h` library.\n\n## References\n\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "3ea78b17-2d4a-32ee-94ec-846c1df4e3ac",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, integer overflow, etc. In this case, the function `atoi()` is used, which can lead to integer overflow or underflow if the input string represents a number outside the range of representable integer values.\n\n## Mitigation Advice\n\nAvoid using C library functions that do not perform bounds checking or that are susceptible to integer overflows, underflows, or other types of vulnerabilities. Instead, use safer alternatives provided by the C++ Standard Library. \n\n## Source Code Fix Recommendation\n\nReplace the `atoi()` function with `std::stoi()`, which throws an exception if the converted value would fall out of the range of the result type or if the underlying function reports an error.\n\n```cpp\n#include <string>\n\ntry {\n    int val = std::stoi(val_string);\n} catch (const std::out_of_range& e) {\n    // Handle the exception\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n- `<string>`\n\n## References\n\n- [OWASP C++](https://owasp.org/www-pdf-archive/OWASP_SCP_v2.pdf)\n- [CWE-681: Incorrect Conversion between Numeric Types](https://cwe.mitre.org/data/definitions/681.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "a00a9da8-f324-3979-bb63-7c6703bb89ae",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Prohibited C Function Identified\" is a vulnerability that arises when a program uses a function that is considered unsafe due to its potential for causing buffer overflows, format string vulnerabilities, or other types of security issues. In this case, the function `atoi()` is used, which is a standard library function in C++ that converts a string to an integer. The `atoi()` function does not perform any error checking, so if the input string is not a valid integer, the behavior of the function is undefined, which can lead to unexpected results and potential security vulnerabilities.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use safer alternatives to `atoi()`, such as `strtol()` or `sscanf()`, which provide error checking. Additionally, always validate and sanitize input data before processing it to prevent injection attacks.\n\n## Source Code Fix Recommendation\n\nReplace the `atoi()` function with a safer alternative. Here is an example of how to do this with `strtol()`:\n\n```cpp\n#include <cstdlib>\n#include <cerrno>\n\nconst char* env_value = getenv(\"ENV_VAR\");\nchar* endptr;\nlong int_value = strtol(env_value, &endptr, 10);\n\nif (endptr == env_value || *endptr != '\\0' || errno == ERANGE) {\n    // handle the error, the input was not a valid integer\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `<cstdlib>`: for `strtol()`\n- `<cerrno>`: for `errno`\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-242: Use of Inherently Dangerous Function](https://cwe.mitre.org/data/definitions/242.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "f3f26ee4-ea14-3fee-82f6-db6c0ff3594a",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions that can lead to various security issues such as buffer overflows, format string vulnerabilities, or integer overflows. In this case, the `getenv` function is used, which can lead to security vulnerabilities. The `getenv` function returns a pointer to a string that is associated with the matched environment variable name. This can be problematic because the returned string can be overwritten by subsequent calls to `getenv`, `setenv`, or `putenv`.\n\n## Mitigation Advice\n\nAvoid using the `getenv` function. If you need to use environment variables, consider using a safer alternative that does not have the same vulnerabilities. Always validate and sanitize input and output data. \n\n## Source Code Fix Recommendation\n\nInstead of using `getenv`, consider using a safer alternative. For example, you can use the `secure_getenv` function if it's available on your system:\n\n```cpp\n#include <stdlib.h>\n\nconst char* env_value = secure_getenv(env_name);\nif (env_value == NULL) {\n    // Handle error\n}\n```\n\n## Library Dependencies\n\nThe code example requires the `stdlib.h` library.\n\n## References\n\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "8b6b424b-11d3-3c98-bef9-ee102baa9771",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, or integer overflows. In this case, the function `atoi()` is used, which can lead to integer overflow if the input string represents a number larger than `INT_MAX`.\n\n## Mitigation Advice\n\nAvoid using C library functions that do not perform bounds checking or input validation. Instead, use safer alternatives provided by the C++ Standard Library. For `atoi()`, a safer alternative is `std::stoi()`, which throws an exception if the input string cannot be converted to an integer or if the converted value is out of the range of representable values by an `int`.\n\n## Source Code Fix Recommendation\n\nReplace the `atoi()` function with `std::stoi()`. Make sure to handle the possible exceptions.\n\n```cpp\n#include <string>\n#include <cstdlib>\n\ntry {\n    device_id = std::stoi(var);\n} catch (const std::invalid_argument& ia) {\n    // Handle the case where 'var' cannot be converted to an integer\n} catch (const std::out_of_range& oor) {\n    // Handle the case where the converted value is out of the range of representable values by an 'int'\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `<string>`: for `std::stoi()`\n- `<cstdlib>`: for `std::invalid_argument` and `std::out_of_range`\n\n## References\n\n- [CWE-190: Integer Overflow or Wraparound](https://cwe.mitre.org/data/definitions/190.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "1eae59da-ad1f-30c5-814e-52e875141ee5",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, or other types of security issues. In this case, the function `getenv()` is used, which can lead to security vulnerabilities if the environment variable it retrieves is controlled by an attacker.\n\nThe `getenv()` function returns a pointer to a string that is associated with the matched environment variable name. If the specified environment variable is not found, the function returns a null pointer. If an attacker can control the environment, they can manipulate the return value of `getenv()`, potentially leading to security issues.\n\n## Mitigation Advice\n\nAvoid using `getenv()` function in your code. If you need to use environment variables, consider safer alternatives that allow for better control and validation of the data. Always validate and sanitize the data retrieved from environment variables.\n\n## Source Code Fix Recommendation\n\nInstead of using `getenv()`, consider using a safer alternative. For example, you can use the `std::getenv()` function from the C++ standard library, which is considered safer. However, you still need to validate and sanitize the data retrieved from the environment variable.\n\n```cpp\n#include <cstdlib>\n\nconst char* value = std::getenv(\"BACKEND\");\nif (value == nullptr) {\n    // Handle the case where the environment variable does not exist.\n} else {\n    // Validate and sanitize 'value' before using it.\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n- `<cstdlib>`: This is a C++ standard library that provides general purpose functions, including the `std::getenv()` function.\n\n## References\n\n- [OWASP C++](https://owasp.org/www-pdf-archive/OWASP_SCP_v2.pdf)\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "6ec6c6e4-6761-3c52-8d36-5ea03ec33d0f",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability in C++ refers to the use of insecure C library functions that can lead to various security issues such as buffer overflows, format string vulnerabilities, or integer overflows. In this case, the function `getenv()` is used, which can lead to security vulnerabilities. The `getenv()` function returns a pointer to a string that is associated with the matched environment variable name. This can lead to information disclosure or code execution vulnerabilities if the environment variable is controlled by an attacker.\n\n## Mitigation Advice\n\nAvoid using insecure C library functions. Instead, use safer alternatives provided by the C++ Standard Library. In this case, consider using the `std::getenv` function from the C++ Standard Library, which is generally safer than the C-style `getenv()` function. \n\n## Source Code Fix Recommendation\n\n```cpp\n#include <cstdlib> // for std::getenv\n\nconst char* device_id = std::getenv(\"DEVICE_ID\");\nif (device_id) {\n    var = device_id;\n} else {\n    // Handle the case where DEVICE_ID is not set in the environment\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n- `<cstdlib>`: This header defines several general purpose functions, including dynamic memory management, random number generation, communication with the environment, integer arithmetics, searching, sorting and converting.\n\n## References\n\n- [OWASP C++](https://owasp.org/www-pdf-archive/OWASP_SCP_v2.pdf)\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS154189"
+                ]
+              }
+            },
+            {
+              "id": "6b19836d-c559-3cd9-9d62-9a3229b6b997",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Detected Prohibited C Function\" vulnerability refers to the use of insecure C library functions in C++ code. These functions are often prone to buffer overflow attacks, format string vulnerabilities, or other types of security issues. In this case, the function `getenv()` is used, which can lead to security vulnerabilities if the environment variable it retrieves is controlled by an attacker.\n\nThe `getenv()` function returns a pointer to a string that is associated with the matched environment variable name passed as input. If the specified environment variable is not found, the function returns a null pointer. If an attacker can control the environment, they can manipulate the output of `getenv()`.\n\n## Mitigation Advice\n\nAvoid using `getenv()` function in your code. If you must use it, ensure that the environment in which your application runs is secure and that untrusted users cannot modify environment variables.\n\n## Source Code Fix Recommendation\n\nIf you need to use an environment variable, consider using a safer alternative to `getenv()`, such as `secure_getenv()`. This function behaves the same as `getenv()` but returns NULL if the process is being run with elevated privileges. This can help prevent privilege escalation attacks.\n\n```cpp\n#include <stdlib.h>\n\n// ...\n\nvar = secure_getenv(\"VERBOSE_DEVICE\");\n```\n\n## Library Dependencies\n\nThe `getenv()` function is part of the C standard library, so you need to include `stdlib.h`.\n\n## References\n\n- [OWASP C++](https://owasp.org/www-pdf-archive/OWASP_SCP_v2.pdf)\n- [CWE-676: Use of Potentially Dangerous Function](https://cwe.mitre.org/data/definitions/676.html)\n\nPlease note that the links provided are accessible to anonymous users at the time of writing this report."
               },
               "properties": {
                 "tags": [
@@ -323,11 +251,11 @@
       "language": "en-US",
       "results": [
         {
-          "ruleId": "9a1997b8-4d52-3676-97eb-5434f02f0098",
+          "ruleId": "fedec4af-661a-3ff5-83cb-c9b67614d40b",
           "kind": "fail",
           "level": "note",
           "message": {
-            "text": "Detected Vulnerability in C Function (memcpy)"
+            "text": "Problematic C function detected (memcpy)"
           },
           "locations": [
             {
@@ -336,17 +264,17 @@
                   "uri": "src/executable/half.hpp"
                 },
                 "region": {
-                  "startLine": 1251,
+                  "startLine": 1002,
                   "startColumn": 8,
-                  "endLine": 1251,
-                  "endColumn": 42,
-                  "charOffset": 74481,
-                  "charLength": 34,
+                  "endLine": 1002,
+                  "endColumn": 45,
+                  "charOffset": 43521,
+                  "charLength": 37,
                   "snippet": {
-                    "text": "memcpy(&out, &fbits, sizeof(float)",
+                    "text": "memcpy(&dbits, &value, sizeof(double)",
                     "rendered": {
-                      "text": "memcpy(&out, &fbits, sizeof(float)",
-                      "markdown": "`memcpy(&out, &fbits, sizeof(float)`"
+                      "text": "memcpy(&dbits, &value, sizeof(double)",
+                      "markdown": "`memcpy(&dbits, &value, sizeof(double)`"
                     }
                   },
                   "sourceLanguage": "cpp"
@@ -367,11 +295,11 @@
                   "replacements": [
                     {
                       "deletedRegion": {
-                        "charOffset": 74481,
-                        "charLength": 34
+                        "charOffset": 43521,
+                        "charLength": 37
                       },
                       "insertedContent": {
-                        "text": "memcpy_s(&out, <size of &out>,  &fbits,  sizeof(float)"
+                        "text": "memcpy_s(&dbits, <size of &dbits>,  &value,  sizeof(double)"
                       }
                     }
                   ]
@@ -453,271 +381,6 @@
           }
         },
         {
-          "ruleId": "38c79a5f-ece1-3bbb-ae03-cc3f2ed7e568",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "Detected Prohibited C Function"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "src/executable/op_driver.cc"
-                },
-                "region": {
-                  "startLine": 276,
-                  "startColumn": 26,
-                  "endLine": 276,
-                  "endColumn": 30,
-                  "charOffset": 7736,
-                  "charLength": 4,
-                  "snippet": {
-                    "text": "atof",
-                    "rendered": {
-                      "text": "atof",
-                      "markdown": "`atof`"
-                    }
-                  },
-                  "sourceLanguage": "cpp"
-                }
-              }
-            }
-          ],
-          "properties": {
-            "DevSkimSeverity": "Moderate",
-            "DevSkimConfidence": "High",
-            "tags": [
-              "API.DangerousAPI.BannedFunction"
-            ]
-          }
-        },
-        {
-          "ruleId": "4ba796c1-a5df-360c-928e-59144860ee0e",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "Detected Prohibited C Function"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "src/executable/op_driver.cc"
-                },
-                "region": {
-                  "startLine": 188,
-                  "startColumn": 23,
-                  "endLine": 188,
-                  "endColumn": 29,
-                  "charOffset": 4626,
-                  "charLength": 6,
-                  "snippet": {
-                    "text": "getenv",
-                    "rendered": {
-                      "text": "getenv",
-                      "markdown": "`getenv`"
-                    }
-                  },
-                  "sourceLanguage": "cpp"
-                }
-              }
-            }
-          ],
-          "properties": {
-            "DevSkimSeverity": "Moderate",
-            "DevSkimConfidence": "High",
-            "tags": [
-              "API.DangerousAPI.BannedFunction"
-            ]
-          }
-        },
-        {
-          "ruleId": "a00a9da8-f324-3979-bb63-7c6703bb89ae",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "\"Prohibited C Function Identified\""
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "src/executable/op_driver.cc"
-                },
-                "region": {
-                  "startLine": 183,
-                  "startColumn": 11,
-                  "endLine": 183,
-                  "endColumn": 15,
-                  "charOffset": 4504,
-                  "charLength": 4,
-                  "snippet": {
-                    "text": "atoi",
-                    "rendered": {
-                      "text": "atoi",
-                      "markdown": "`atoi`"
-                    }
-                  },
-                  "sourceLanguage": "cpp"
-                }
-              }
-            }
-          ],
-          "properties": {
-            "DevSkimSeverity": "Moderate",
-            "DevSkimConfidence": "High",
-            "tags": [
-              "API.DangerousAPI.BannedFunction"
-            ]
-          }
-        },
-        {
-          "ruleId": "f3f26ee4-ea14-3fee-82f6-db6c0ff3594a",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "Detected Prohibited C Function"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "src/executable/op_driver.cc"
-                },
-                "region": {
-                  "startLine": 180,
-                  "startColumn": 23,
-                  "endLine": 180,
-                  "endColumn": 29,
-                  "charOffset": 4426,
-                  "charLength": 6,
-                  "snippet": {
-                    "text": "getenv",
-                    "rendered": {
-                      "text": "getenv",
-                      "markdown": "`getenv`"
-                    }
-                  },
-                  "sourceLanguage": "cpp"
-                }
-              }
-            }
-          ],
-          "properties": {
-            "DevSkimSeverity": "Moderate",
-            "DevSkimConfidence": "High",
-            "tags": [
-              "API.DangerousAPI.BannedFunction"
-            ]
-          }
-        },
-        {
-          "ruleId": "fedec4af-661a-3ff5-83cb-c9b67614d40b",
-          "kind": "fail",
-          "level": "note",
-          "message": {
-            "text": "Problematic C function detected (memcpy)"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "src/executable/half.hpp"
-                },
-                "region": {
-                  "startLine": 1002,
-                  "startColumn": 8,
-                  "endLine": 1002,
-                  "endColumn": 45,
-                  "charOffset": 43521,
-                  "charLength": 37,
-                  "snippet": {
-                    "text": "memcpy(&dbits, &value, sizeof(double)",
-                    "rendered": {
-                      "text": "memcpy(&dbits, &value, sizeof(double)",
-                      "markdown": "`memcpy(&dbits, &value, sizeof(double)`"
-                    }
-                  },
-                  "sourceLanguage": "cpp"
-                }
-              }
-            }
-          ],
-          "fixes": [
-            {
-              "description": {
-                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
-              },
-              "artifactChanges": [
-                {
-                  "artifactLocation": {
-                    "uri": "src/executable/half.hpp"
-                  },
-                  "replacements": [
-                    {
-                      "deletedRegion": {
-                        "charOffset": 43521,
-                        "charLength": 37
-                      },
-                      "insertedContent": {
-                        "text": "memcpy_s(&dbits, <size of &dbits>,  &value,  sizeof(double)"
-                      }
-                    }
-                  ]
-                }
-              ]
-            }
-          ],
-          "properties": {
-            "DevSkimSeverity": "BestPractice",
-            "DevSkimConfidence": "High",
-            "tags": [
-              "API.DangerousAPI.ProblematicFunction"
-            ]
-          }
-        },
-        {
-          "ruleId": "6ec6c6e4-6761-3c52-8d36-5ea03ec33d0f",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "Detected Prohibited C Function"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "src/executable/op_driver.cc"
-                },
-                "region": {
-                  "startLine": 122,
-                  "startColumn": 10,
-                  "endLine": 122,
-                  "endColumn": 16,
-                  "charOffset": 2886,
-                  "charLength": 6,
-                  "snippet": {
-                    "text": "getenv",
-                    "rendered": {
-                      "text": "getenv",
-                      "markdown": "`getenv`"
-                    }
-                  },
-                  "sourceLanguage": "cpp"
-                }
-              }
-            }
-          ],
-          "properties": {
-            "DevSkimSeverity": "Moderate",
-            "DevSkimConfidence": "High",
-            "tags": [
-              "API.DangerousAPI.BannedFunction"
-            ]
-          }
-        },
-        {
           "ruleId": "c726c202-6be5-3b8a-9093-1e341a97e7df",
           "kind": "fail",
           "level": "note",
@@ -783,30 +446,30 @@
           }
         },
         {
-          "ruleId": "3ea78b17-2d4a-32ee-94ec-846c1df4e3ac",
+          "ruleId": "9a1997b8-4d52-3676-97eb-5434f02f0098",
           "kind": "fail",
-          "level": "warning",
+          "level": "note",
           "message": {
-            "text": "Detected Prohibited C Function"
+            "text": "Detected Vulnerability in C Function (memcpy)"
           },
           "locations": [
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "src/executable/op_driver.cc"
+                  "uri": "src/executable/half.hpp"
                 },
                 "region": {
-                  "startLine": 272,
-                  "startColumn": 19,
-                  "endLine": 272,
-                  "endColumn": 23,
-                  "charOffset": 7590,
-                  "charLength": 4,
+                  "startLine": 1251,
+                  "startColumn": 8,
+                  "endLine": 1251,
+                  "endColumn": 42,
+                  "charOffset": 74481,
+                  "charLength": 34,
                   "snippet": {
-                    "text": "atoi",
+                    "text": "memcpy(&out, &fbits, sizeof(float)",
                     "rendered": {
-                      "text": "atoi",
-                      "markdown": "`atoi`"
+                      "text": "memcpy(&out, &fbits, sizeof(float)",
+                      "markdown": "`memcpy(&out, &fbits, sizeof(float)`"
                     }
                   },
                   "sourceLanguage": "cpp"
@@ -814,56 +477,41 @@
               }
             }
           ],
-          "properties": {
-            "DevSkimSeverity": "Moderate",
-            "DevSkimConfidence": "High",
-            "tags": [
-              "API.DangerousAPI.BannedFunction"
-            ]
-          }
-        },
-        {
-          "ruleId": "8b6b424b-11d3-3c98-bef9-ee102baa9771",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "Detected Prohibited C Function"
-          },
-          "locations": [
+          "fixes": [
             {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "src/executable/op_driver.cc"
-                },
-                "region": {
-                  "startLine": 124,
-                  "startColumn": 20,
-                  "endLine": 124,
-                  "endColumn": 24,
-                  "charOffset": 2939,
-                  "charLength": 4,
-                  "snippet": {
-                    "text": "atoi",
-                    "rendered": {
-                      "text": "atoi",
-                      "markdown": "`atoi`"
-                    }
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "src/executable/half.hpp"
                   },
-                  "sourceLanguage": "cpp"
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 74481,
+                        "charLength": 34
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(&out, <size of &out>,  &fbits,  sizeof(float)"
+                      }
+                    }
+                  ]
                 }
-              }
+              ]
             }
           ],
           "properties": {
-            "DevSkimSeverity": "Moderate",
+            "DevSkimSeverity": "BestPractice",
             "DevSkimConfidence": "High",
             "tags": [
-              "API.DangerousAPI.BannedFunction"
+              "API.DangerousAPI.ProblematicFunction"
             ]
           }
         },
         {
-          "ruleId": "1eae59da-ad1f-30c5-814e-52e875141ee5",
+          "ruleId": "157dc3d6-4d46-3524-8aad-9aa38b0bd666",
           "kind": "fail",
           "level": "warning",
           "message": {
@@ -873,60 +521,20 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "src/executable/op_driver.cc"
+                  "uri": "src/backend/backend_cudnn.cc"
                 },
                 "region": {
-                  "startLine": 116,
+                  "startLine": 5,
                   "startColumn": 17,
-                  "endLine": 116,
+                  "endLine": 5,
                   "endColumn": 23,
-                  "charOffset": 2735,
+                  "charOffset": 131,
                   "charLength": 6,
                   "snippet": {
                     "text": "getenv",
                     "rendered": {
                       "text": "getenv",
                       "markdown": "`getenv`"
-                    }
-                  },
-                  "sourceLanguage": "cpp"
-                }
-              }
-            }
-          ],
-          "properties": {
-            "DevSkimSeverity": "Moderate",
-            "DevSkimConfidence": "High",
-            "tags": [
-              "API.DangerousAPI.BannedFunction"
-            ]
-          }
-        },
-        {
-          "ruleId": "387c23bd-44de-3c9c-ab60-c9b3855030a2",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "\"Prohibited C Function Identified\""
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "src/backend/op_convolution_miopen.cc"
-                },
-                "region": {
-                  "startLine": 319,
-                  "startColumn": 1,
-                  "endLine": 319,
-                  "endColumn": 7,
-                  "charOffset": 14035,
-                  "charLength": 6,
-                  "snippet": {
-                    "text": "printf",
-                    "rendered": {
-                      "text": "printf",
-                      "markdown": "`printf`"
                     }
                   },
                   "sourceLanguage": "cpp"
@@ -1007,246 +615,6 @@
                     "rendered": {
                       "text": "fopen",
                       "markdown": "`fopen`"
-                    }
-                  },
-                  "sourceLanguage": "cpp"
-                }
-              }
-            }
-          ],
-          "properties": {
-            "DevSkimSeverity": "Moderate",
-            "DevSkimConfidence": "High",
-            "tags": [
-              "API.DangerousAPI.BannedFunction"
-            ]
-          }
-        },
-        {
-          "ruleId": "6b19836d-c559-3cd9-9d62-9a3229b6b997",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "Detected Prohibited C Function"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "src/backend/backend_miopen.cc"
-                },
-                "region": {
-                  "startLine": 8,
-                  "startColumn": 17,
-                  "endLine": 8,
-                  "endColumn": 23,
-                  "charOffset": 146,
-                  "charLength": 6,
-                  "snippet": {
-                    "text": "getenv",
-                    "rendered": {
-                      "text": "getenv",
-                      "markdown": "`getenv`"
-                    }
-                  },
-                  "sourceLanguage": "cpp"
-                }
-              }
-            }
-          ],
-          "properties": {
-            "DevSkimSeverity": "Moderate",
-            "DevSkimConfidence": "High",
-            "tags": [
-              "API.DangerousAPI.BannedFunction"
-            ]
-          }
-        },
-        {
-          "ruleId": "f279adef-0f72-3ba4-a333-7aba79c59f25",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "\"Prohibited C Function Identified\""
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "src/backend/op_convolution_miopen.cc"
-                },
-                "region": {
-                  "startLine": 453,
-                  "startColumn": 1,
-                  "endLine": 453,
-                  "endColumn": 7,
-                  "charOffset": 19413,
-                  "charLength": 6,
-                  "snippet": {
-                    "text": "printf",
-                    "rendered": {
-                      "text": "printf",
-                      "markdown": "`printf`"
-                    }
-                  },
-                  "sourceLanguage": "cpp"
-                }
-              }
-            }
-          ],
-          "properties": {
-            "DevSkimSeverity": "Moderate",
-            "DevSkimConfidence": "High",
-            "tags": [
-              "API.DangerousAPI.BannedFunction"
-            ]
-          }
-        },
-        {
-          "ruleId": "1d8e80a7-ec16-3ac8-a152-8e7e1d2a65bf",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "\"Prohibited C Function Identified\""
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "src/backend/op_convolution_miopen.cc"
-                },
-                "region": {
-                  "startLine": 390,
-                  "startColumn": 1,
-                  "endLine": 390,
-                  "endColumn": 7,
-                  "charOffset": 17095,
-                  "charLength": 6,
-                  "snippet": {
-                    "text": "printf",
-                    "rendered": {
-                      "text": "printf",
-                      "markdown": "`printf`"
-                    }
-                  },
-                  "sourceLanguage": "cpp"
-                }
-              }
-            }
-          ],
-          "properties": {
-            "DevSkimSeverity": "Moderate",
-            "DevSkimConfidence": "High",
-            "tags": [
-              "API.DangerousAPI.BannedFunction"
-            ]
-          }
-        },
-        {
-          "ruleId": "157dc3d6-4d46-3524-8aad-9aa38b0bd666",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "Detected Prohibited C Function"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "src/backend/backend_cudnn.cc"
-                },
-                "region": {
-                  "startLine": 5,
-                  "startColumn": 17,
-                  "endLine": 5,
-                  "endColumn": 23,
-                  "charOffset": 131,
-                  "charLength": 6,
-                  "snippet": {
-                    "text": "getenv",
-                    "rendered": {
-                      "text": "getenv",
-                      "markdown": "`getenv`"
-                    }
-                  },
-                  "sourceLanguage": "cpp"
-                }
-              }
-            }
-          ],
-          "properties": {
-            "DevSkimSeverity": "Moderate",
-            "DevSkimConfidence": "High",
-            "tags": [
-              "API.DangerousAPI.BannedFunction"
-            ]
-          }
-        },
-        {
-          "ruleId": "6b4714db-f149-3e51-8f5a-617d97fd1530",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "\"Prohibited C Function Identified\""
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "src/backend/op_convolution_cudnn.cc"
-                },
-                "region": {
-                  "startLine": 535,
-                  "startColumn": 1,
-                  "endLine": 535,
-                  "endColumn": 7,
-                  "charOffset": 22699,
-                  "charLength": 6,
-                  "snippet": {
-                    "text": "printf",
-                    "rendered": {
-                      "text": "printf",
-                      "markdown": "`printf`"
-                    }
-                  },
-                  "sourceLanguage": "cpp"
-                }
-              }
-            }
-          ],
-          "properties": {
-            "DevSkimSeverity": "Moderate",
-            "DevSkimConfidence": "High",
-            "tags": [
-              "API.DangerousAPI.BannedFunction"
-            ]
-          }
-        },
-        {
-          "ruleId": "869a6cb7-7a9f-3f8b-a5b2-2df5be402248",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "\"Prohibited C Function Identified\""
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "src/backend/op_convolution_cudnn.cc"
-                },
-                "region": {
-                  "startLine": 391,
-                  "startColumn": 1,
-                  "endLine": 391,
-                  "endColumn": 7,
-                  "charOffset": 16849,
-                  "charLength": 6,
-                  "snippet": {
-                    "text": "printf",
-                    "rendered": {
-                      "text": "printf",
-                      "markdown": "`printf`"
                     }
                   },
                   "sourceLanguage": "cpp"
@@ -1408,7 +776,127 @@
           }
         },
         {
-          "ruleId": "5175f65d-6c0f-3e47-85fa-5b8cdde2204a",
+          "ruleId": "38c79a5f-ece1-3bbb-ae03-cc3f2ed7e568",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/executable/op_driver.cc"
+                },
+                "region": {
+                  "startLine": 276,
+                  "startColumn": 26,
+                  "endLine": 276,
+                  "endColumn": 30,
+                  "charOffset": 7736,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "atof",
+                    "rendered": {
+                      "text": "atof",
+                      "markdown": "`atof`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "4ba796c1-a5df-360c-928e-59144860ee0e",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/executable/op_driver.cc"
+                },
+                "region": {
+                  "startLine": 188,
+                  "startColumn": 23,
+                  "endLine": 188,
+                  "endColumn": 29,
+                  "charOffset": 4626,
+                  "charLength": 6,
+                  "snippet": {
+                    "text": "getenv",
+                    "rendered": {
+                      "text": "getenv",
+                      "markdown": "`getenv`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "3ea78b17-2d4a-32ee-94ec-846c1df4e3ac",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/executable/op_driver.cc"
+                },
+                "region": {
+                  "startLine": 272,
+                  "startColumn": 19,
+                  "endLine": 272,
+                  "endColumn": 23,
+                  "charOffset": 7590,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "atoi",
+                    "rendered": {
+                      "text": "atoi",
+                      "markdown": "`atoi`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "a00a9da8-f324-3979-bb63-7c6703bb89ae",
           "kind": "fail",
           "level": "warning",
           "message": {
@@ -1418,20 +906,220 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "src/backend/op_convolution_cudnn.cc"
+                  "uri": "src/executable/op_driver.cc"
                 },
                 "region": {
-                  "startLine": 462,
-                  "startColumn": 1,
-                  "endLine": 462,
-                  "endColumn": 7,
-                  "charOffset": 19893,
+                  "startLine": 183,
+                  "startColumn": 11,
+                  "endLine": 183,
+                  "endColumn": 15,
+                  "charOffset": 4504,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "atoi",
+                    "rendered": {
+                      "text": "atoi",
+                      "markdown": "`atoi`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "f3f26ee4-ea14-3fee-82f6-db6c0ff3594a",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/executable/op_driver.cc"
+                },
+                "region": {
+                  "startLine": 180,
+                  "startColumn": 23,
+                  "endLine": 180,
+                  "endColumn": 29,
+                  "charOffset": 4426,
                   "charLength": 6,
                   "snippet": {
-                    "text": "printf",
+                    "text": "getenv",
                     "rendered": {
-                      "text": "printf",
-                      "markdown": "`printf`"
+                      "text": "getenv",
+                      "markdown": "`getenv`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "8b6b424b-11d3-3c98-bef9-ee102baa9771",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/executable/op_driver.cc"
+                },
+                "region": {
+                  "startLine": 124,
+                  "startColumn": 20,
+                  "endLine": 124,
+                  "endColumn": 24,
+                  "charOffset": 2939,
+                  "charLength": 4,
+                  "snippet": {
+                    "text": "atoi",
+                    "rendered": {
+                      "text": "atoi",
+                      "markdown": "`atoi`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "1eae59da-ad1f-30c5-814e-52e875141ee5",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/executable/op_driver.cc"
+                },
+                "region": {
+                  "startLine": 116,
+                  "startColumn": 17,
+                  "endLine": 116,
+                  "endColumn": 23,
+                  "charOffset": 2735,
+                  "charLength": 6,
+                  "snippet": {
+                    "text": "getenv",
+                    "rendered": {
+                      "text": "getenv",
+                      "markdown": "`getenv`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "6ec6c6e4-6761-3c52-8d36-5ea03ec33d0f",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/executable/op_driver.cc"
+                },
+                "region": {
+                  "startLine": 122,
+                  "startColumn": 10,
+                  "endLine": 122,
+                  "endColumn": 16,
+                  "charOffset": 2886,
+                  "charLength": 6,
+                  "snippet": {
+                    "text": "getenv",
+                    "rendered": {
+                      "text": "getenv",
+                      "markdown": "`getenv`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Moderate",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "6b19836d-c559-3cd9-9d62-9a3229b6b997",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Detected Prohibited C Function"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/backend/backend_miopen.cc"
+                },
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 17,
+                  "endLine": 8,
+                  "endColumn": 23,
+                  "charOffset": 146,
+                  "charLength": 6,
+                  "snippet": {
+                    "text": "getenv",
+                    "rendered": {
+                      "text": "getenv",
+                      "markdown": "`getenv`"
                     }
                   },
                   "sourceLanguage": "cpp"
